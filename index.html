@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrenamiento para Test de Ishihara</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+
+<body class="bg-gray-50 font-sans antialiased">
+  <header class="bg-white shadow-md sticky top-0 z-10">
+    <div class="container mx-auto p-4">
+      <h1 class="text-3xl font-bold text-center text-blue-700 md:text-4xl">Entrenamiento para el Test de Ishihara</h1>
+    </div>
+  </header>
+
+  <main class="container mx-auto p-4 md:p-6">
+    <!-- Navigation Tabs -->
+    <div class="flex justify-center mb-6 shadow-lg rounded-lg overflow-hidden bg-white">
+      <button id="testTab"
+        class="flex-1 px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors md:text-base">Test</button>
+      <button id="pdfTab"
+        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Ver
+        PDF Oficial</button>
+      <button id="tipsTab"
+        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Consejos</button>
+    </div>
+
+    <!-- Test Section -->
+    <div id="testSection" class="hidden animate-fade-in">
+      <div id="testContainer" class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
+        <p id="remainingImages" class="mb-4 text-lg font-semibold text-center text-gray-700">Faltan 38 de 38 imágenes
+        </p>
+        <div class="flex justify-center gap-2 mb-4">
+          <button id="zoomInImage"
+            class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-l-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md text-sm md:text-base">+
+            Zoom</button>
+          <button id="zoomOutImage"
+            class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-r-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md text-sm md:text-base">−
+            Zoom</button>
+        </div>
+        <div class="overflow-auto min-h-[1000px] md:min-h-[1000px] flex justify-center">
+          <img id="ishiharaImage" src="" alt="Placa de Ishihara" class="max-w-full h-auto mb-4 rounded-lg">
+        </div>
+        <input id="userAnswer" type="text" placeholder="Ingresa lo que ves"
+          class="border border-gray-300 p-2 rounded-lg mb-4 w-full max-w-xs mx-auto focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
+        <button id="submitAnswer"
+          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md w-full max-w-xs mx-auto">Enviar</button>
+        <p id="resultMessage" class="mt-4 text-lg text-center text-gray-800"></p>
+        <button id="nextImage"
+          class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md mt-4 hidden w-full max-w-xs mx-auto">Siguiente</button>
+      </div>
+      <div id="resultsSection" class="hidden mt-8 animate-fade-in">
+        <h2 class="text-2xl font-bold text-center mb-6 text-blue-700 md:text-3xl">Resultados</h2>
+        <div class="overflow-x-auto">
+          <table id="resultsTable" class="w-full border-collapse border border-gray-200 bg-white shadow-xl rounded-xl">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Imagen</th>
+                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Tu Respuesta</th>
+                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Respuesta Correcta (Visión
+                  Normal)</th>
+                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Respuesta Daltónica</th>
+                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Estado</th>
+                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Sugerencia</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="diagnosis" class="mt-6 text-lg font-semibold text-center text-gray-800 md:text-xl"></p>
+        <div id="improvementTips" class="mt-8 bg-white p-6 md:p-8 rounded-xl shadow-xl">
+          <h3 class="text-xl font-bold text-center mb-4 text-blue-700 md:text-2xl">Consejos para Mejorar</h3>
+          <ul class="list-disc pl-6 text-gray-700">
+            <li>Practica en un ambiente con luz natural para mejorar la percepción de colores.</li>
+            <li>Enfócate en los bordes de los números o líneas para identificar patrones.</li>
+            <li>Toma descansos cada 10-15 minutos para evitar fatiga visual.</li>
+            <li>Repite el test varias veces para memorizar las respuestas correctas.</li>
+            <li>Consulta el PDF oficial para estudiar las placas en detalle.</li>
+          </ul>
+        </div>
+        <button id="restartTest"
+          class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md mt-6 block mx-auto w-full max-w-xs">Reiniciar
+          Test</button>
+      </div>
+    </div>
+
+    <!-- PDF Section -->
+    <div id="pdfSection" class="hidden animate-fade-in">
+      <div id="pdfError" class="hidden text-red-600 mb-4 text-center">Error al cargar el PDF. Verifica que el archivo
+        'documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf' exista y que la página se ejecute desde un servidor local
+        (por ejemplo, 'python -m http.server'). <a href="documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf"
+          class="underline" download>Descargar PDF</a></div>
+      <div class="flex justify-between mb-4 gap-2">
+        <button id="zoomIn"
+          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">+
+          Zoom</button>
+        <button id="zoomOut"
+          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">−
+          Zoom</button>
+        <button id="fullScreen"
+          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">Pantalla
+          Completa</button>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-xl">
+        <canvas id="pdfCanvas" class="border border-gray-200 w-full rounded-lg"></canvas>
+      </div>
+      <div class="flex justify-between mt-4 gap-2">
+        <button id="prevPage"
+          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">Anterior</button>
+        <span id="pageInfo" class="self-center text-gray-700 text-sm md:text-base"></span>
+        <button id="nextPage"
+          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">Siguiente</button>
+      </div>
+    </div>
+
+    <!-- Tips Section -->
+    <div id="tipsSection" class="hidden mt-8 animate-fade-in">
+      <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
+        <h2 class="text-2xl font-bold text-center mb-4 text-blue-700 md:text-3xl">Consejos para Mejorar en el Test de
+          Ishihara</h2>
+        <ul class="list-disc pl-6 text-gray-700">
+          <li>Practica en un ambiente con luz natural para distinguir mejor los colores.</li>
+          <li>Enfócate en los bordes de los números o patrones para identificarlos con mayor claridad.</li>
+          <li>Toma descansos frecuentes para evitar la fatiga visual, que puede afectar tu percepción.</li>
+          <li>Memoriza las respuestas correctas de cada placa practicando repetidamente.</li>
+          <li>Usa el visor de PDF para estudiar las placas oficiales y familiarizarte con los patrones.</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-white shadow-inner mt-8 py-4">
+    <div class="container mx-auto text-center text-gray-600 text-sm">
+      <p>Desarrollado para entrenamiento del Test de Ishihara | © 2025</p>
+    </div>
+  </footer>
+
+  <script>
+    // Correct answers for each Ishihara plate
+    const correctAnswers = [
+      "Cualquier persona debería poder ver el número doce (12).",
+      "Visión normal: Deberían ver el número ocho (8). Visión con deficiencia rojo–verde: Verán el número tres (3).",
+      "Visión normal: Deberían ver el número seis (6). Visión con deficiencia rojo–verde: Verán el número cinco (5).",
+      "Visión normal: Deberían ver el número seis (6). Visión con deficiencia rojo–verde: Verán el número cinco (5).",
+      "Visión normal: Deberían ver el número veintinueve (29). Visión con deficiencia rojo–verde: Verán el número setenta (70).",
+      "Visión normal: Deberían ver el número cincuenta y siete (57). Visión con deficiencia rojo–verde: Verán el número treinta y cinco (35).",
+      "Visión normal: Deberían ver el número cinco (5). Visión con deficiencia rojo–verde: Verán el número dos (2).",
+      "Visión normal: Deberían ver el número tres (3). Visión con deficiencia rojo–verde: Verán el número cinco (5).",
+      "Visión normal: Deberían ver el número quince (15). Visión con deficiencia rojo–verde: Verán el número diecisiete (17).",
+      "Visión normal: Deberían ver el número setenta y cuatro (74). Visión con deficiencia rojo–verde: Verán el número veintiuno (21).",
+      "Visión normal: Deberían ver el número dos (2). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: Deberían ver el número seis (6). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: Deberían ver el número noventa y siete (97). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: Deberían ver el número cuarenta y cinco (45). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: Deberían ver el número cinco (5). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: Deberían ver el número siete (7). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: Deberían ver el número dieciséis (16). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: Deberían ver el número setenta y tres (73). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
+      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número cinco (5).",
+      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número dos (2).",
+      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número cuarenta y cinco (45).",
+      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número setenta y tres (73).",
+      "Visión normal: Deberían ver el número veintiséis (26). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número seis (6). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número dos (2).",
+      "Visión normal: Deberían ver el número cuarenta y dos (42). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número dos (2). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número cuatro (4).",
+      "Visión normal: Deberían ver el número treinta y cinco (35). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número cinco (5). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número tres (3).",
+      "Visión normal: Deberían ver el número noventa y seis (96). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número seis (6). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número nueve (9).",
+      "Visión normal: Verán puntos morados y rojos. Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Verán solo la línea morada. Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Verán solo la línea roja.",
+      "Visión normal: Verán puntos morados y rojos. Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Verán solo la línea morada. Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Verán solo la línea roja.",
+      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Una línea.",
+      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Una línea.",
+      "Visión normal: Verán una línea azul–verde. Visión con deficiencia rojo–verde: No deberían ver nada coherente.",
+      "Visión normal: Verán una línea azul–verde. Visión con deficiencia rojo–verde: No deberían ver nada coherente.",
+      "Visión normal: Verán una línea anaranjada. Visión con deficiencia rojo–verde: No deberían ver nada coherente o una falsa línea.",
+      "Visión normal: Verán una línea anaranjada. Visión con deficiencia rojo–verde: No deberían ver nada coherente o una falsa línea.",
+      "Visión normal: Verán una línea azul–verde y amarillo–verde. Visión con deficiencia rojo–verde: Sólo una línea rojo–verde y una línea violeta.",
+      "Visión normal: Verán una línea azul–verde y amarillo–verde. Visión con deficiencia rojo–verde: Sólo una línea azul–verde y una línea violeta.",
+      "Visión normal: Verán líneas violeta y naranja. Visión con deficiencia rojo–verde: Sólo una línea azul–verde y una línea violeta.",
+      "Visión normal: Verán líneas violeta y naranja. Visión con deficiencia rojo–verde: Sólo una línea azul–verde y una línea violeta.",
+      "Cualquier persona debería poder ver la misma línea."
+    ];
+
+    // Expected answers for normal vision
+    const expectedNormalAnswers = [
+      "12", "8", "6", "6", "29", "57", "5", "3", "15", "74",
+      "2", "6", "97", "45", "5", "7", "16", "73", "", "", "", "",
+      "26", "42", "35", "96", "puntos morados y rojos", "puntos morados y rojos",
+      "", "", "línea azul–verde", "línea azul–verde", "línea anaranjada", "línea anaranjada",
+      "línea azul–verde y amarillo–verde", "línea azul–verde y amarillo–verde",
+      "líneas violeta y naranja", "líneas violeta y naranja", "línea"
+    ];
+
+    // Expected answers for colorblind vision
+    const expectedColorblindAnswers = [
+      "12", "3", "5", "5", "70", "35", "2", "5", "17", "21",
+      "nada significativo", "nada significativo", "nada significativo", "nada significativo",
+      "nada significativo", "nada significativo", "nada significativo", "nada significativo",
+      "5", "2", "45", "73", "6 o 2", "2 o 4", "5 o 3", "6 o 9",
+      "línea morada o línea roja", "línea morada o línea roja", "una línea", "una línea",
+      "nada coherente", "nada coherente", "nada coherente o falsa línea", "nada coherente o falsa línea",
+      "línea rojo–verde y violeta", "línea azul–verde y violeta", "línea azul–verde y violeta", "línea azul–verde y violeta",
+      "línea"
+    ];
+
+    // Suggestions for incorrect answers
+    const suggestions = [
+      "",
+      "Enfócate en los bordes superiores del número para distinguir el 8.",
+      "Observa el centro de la placa para identificar el 6.",
+      "Observa el centro de la placa para identificar el 6.",
+      "Cuenta los dígitos en el área central para ver el 29.",
+      "Enfócate en la parte inferior para distinguir el 57.",
+      "Busca el contraste en la parte superior para ver el 5.",
+      "Revisa los bordes del número para identificar el 3.",
+      "Observa la placa completa para distinguir el 15.",
+      "Enfócate en los bordes para ver el 74.",
+      "Busca un solo dígito en el centro para el 2.",
+      "Observa el área central para encontrar el 6.",
+      "Cuenta los dígitos en la parte superior para el 97.",
+      "Enfócate en los bordes para ver el 45.",
+      "Busca un solo dígito en el centro para el 5.",
+      "Observa el área central para encontrar el 7.",
+      "Enfócate en los bordes para identificar el 16.",
+      "Revisa la parte superior para ver el 73.",
+      "Busca un número en el centro si no ves nada claro.",
+      "Observa el centro para encontrar el 2.",
+      "Enfócate en los bordes para ver el 45.",
+      "Revisa la placa completa para identificar el 73.",
+      "Observa los patrones en la parte central para el 26.",
+      "Enfócate en los bordes para distinguir el 42.",
+      "Busca el número en el área superior para el 35.",
+      "Revisa los bordes para identificar el 96.",
+      "Busca líneas rectas de colores en el centro.",
+      "Observa las líneas rectas en el área central.",
+      "Enfócate en el centro para ver una línea clara.",
+      "Busca una línea recta en el centro.",
+      "Observa una línea vertical u horizontal clara.",
+      "Enfócate en el centro para ver una línea.",
+      "Busca una línea de color claro en el centro.",
+      "Observa una línea recta en el área central.",
+      "Enfócate en dos líneas claras en la placa.",
+      "Busca dos líneas distintas en el centro.",
+      "Observa dos líneas de colores diferentes.",
+      "Enfócate en las líneas rectas en el centro.",
+      ""
+    ];
+
+    let currentImageIndex = 0;
+    let userResponses = [];
+    let imageOrder = [];
+    let pdfDoc = null;
+    let pageNum = 1;
+    let zoomLevel = 1;
+    let imageScale = 1; // For test image zoom
+
+    // Function to colorize color names
+    function colorizeText(text) {
+      const colorMap = {
+        'rojo': 'red',
+        'verde': 'green',
+        'azul': 'blue',
+        'morado': 'purple',
+        'morada': 'purple',
+        'anaranjada': 'orange',
+        'naranja': 'orange',
+        'amarillo': 'yellow',
+        'violeta': 'purple'
+      };
+      let coloredText = text;
+      for (const [color, cssColor] of Object.entries(colorMap)) {
+        const regex = new RegExp(`\\b${color}\\b`, 'gi');
+        coloredText = coloredText.replace(regex, `<span style="color: ${cssColor}">${color}</span>`);
+      }
+      return coloredText;
+    }
+
+    // Initialize test
+    function initTest() {
+      imageOrder = Array.from({ length: 38 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+      currentImageIndex = 0;
+      userResponses = [];
+      imageScale = 1;
+      document.getElementById('ishiharaImage').src = `imagenes/ishihara-image-${imageOrder[currentImageIndex]}.jpg`;
+      document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
+      document.getElementById('userAnswer').value = '';
+      document.getElementById('resultMessage').innerHTML = '';
+      document.getElementById('nextImage').classList.add('hidden');
+      document.getElementById('submitAnswer').classList.remove('hidden');
+      document.getElementById('testContainer').classList.remove('hidden');
+      document.getElementById('resultsSection').classList('hidden');
+      updateRemainingImages();
+    }
+
+    // Update remaining images counter
+    function updateRemainingImages() {
+      const remaining = 38 - currentImageIndex;
+      document.getElementById('remainingImages').textContent = `Faltan ${remaining} de 38 imágenes`;
+    }
+
+    // Handle image zoom
+    document.getElementById('zoomInImage').addEventListener('click', () => {
+      if (imageScale < 2.5) {
+        imageScale += 0.2;
+        document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
+      }
+    });
+
+    document.getElementById('zoomOutImage').addEventListener('click', () => {
+      if (imageScale > 0.5) {
+        imageScale -= 0.2;
+        document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
+      }
+    });
+
+    // Handle answer submission
+    document.getElementById('submitAnswer').addEventListener('click', () => {
+      const userAnswer = document.getElementById('userAnswer').value.trim();
+      userResponses.push(userAnswer);
+      const message = correctAnswers[imageOrder[currentImageIndex] - 1].replace(/\. /g, '.<br>');
+      document.getElementById('resultMessage').innerHTML = colorizeText(message);
+      document.getElementById('nextImage').classList.remove('hidden');
+      document.getElementById('submitAnswer').classList.add('hidden');
+    });
+
+    // Handle Enter key for submission
+    document.getElementById('userAnswer').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('submitAnswer').click();
+      }
+    });
+
+    // Handle next image
+    document.getElementById('nextImage').addEventListener('click', () => {
+      currentImageIndex++;
+      if (currentImageIndex < 38) {
+        imageScale = 1;
+        document.getElementById('ishiharaImage').src = `imagenes/ishihara-image-${imageOrder[currentImageIndex]}.jpg`;
+        document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
+        document.getElementById('userAnswer').value = '';
+        document.getElementById('resultMessage').innerHTML = '';
+        document.getElementById('nextImage').classList.add('hidden');
+        document.getElementById('submitAnswer').classList.remove('hidden');
+        updateRemainingImages();
+      } else {
+        showResults();
+      }
+    });
+
+    // Show results
+    function showResults() {
+      document.getElementById('testContainer').classList.add('hidden');
+      document.getElementById('resultsSection').classList.remove('hidden');
+      const tbody = document.getElementById('resultsTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      let errors = 0;
+
+      imageOrder.forEach((imgNum, i) => {
+        const userAnswer = userResponses[i];
+        const correctAnswer = expectedNormalAnswers[imgNum - 1];
+        const colorblindAnswer = expectedColorblindAnswers[imgNum - 1];
+        const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase() || (correctAnswer === '' && userAnswer === '');
+        if (!isCorrect && correctAnswer !== '') errors++;
+        const suggestion = isCorrect ? '' : suggestions[imgNum - 1];
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+                    <td class="border border-gray-200 p-3"><img src="imagenes/ishihara-image-${imgNum}.jpg" class="w-16 h-16 object-cover rounded-lg"></td>
+                    <td class="border border-gray-200 p-3">${userAnswer}</td>
+                    <td class="border border-gray-200 p-3">${colorizeText(correctAnswers[imgNum - 1].replace(/\. /g, '.<br>'))}</td>
+                    <td class="border border-gray-200 p-3">${colorizeText(colorblindAnswer)}</td>
+                    <td class="border border-gray-200 p-3 ${isCorrect ? 'text-green-600' : 'text-red-600'}">${isCorrect ? 'Correcto' : 'Incorrecto'}</td>
+                    <td class="border border-gray-200 p-3">${suggestion}</td>
+                `;
+        tbody.appendChild(row);
+      });
+
+      // Diagnosis based on errors
+      let diagnosisText = '';
+      if (errors <= 4) {
+        diagnosisText = 'Basado en tus resultados, parece que tienes una visión normal o una deficiencia muy leve.';
+      } else if (errors <= 8) {
+        diagnosisText = 'Basado en tus resultados, podrías tener una deficiencia rojo-verde leve a moderada.';
+      } else {
+        diagnosisText = 'Basado en tus resultados, es probable que tengas una deficiencia rojo-verde moderada a severa.';
+      }
+      document.getElementById('diagnosis').textContent = diagnosisText;
+    }
+
+    // Restart test
+    document.getElementById('restartTest').addEventListener('click', initTest);
+
+    // PDF Viewer
+    async function loadPDF() {
+      try {
+        const pdfjsLib = window['pdfjsLib'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+        pdfDoc = await pdfjsLib.getDocument('documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf').promise;
+        document.getElementById('pdfError').classList.add('hidden');
+        renderPage(pageNum);
+      } catch (error) {
+        console.error('Error loading PDF:', error);
+        document.getElementById('pdfError').classList.remove('hidden');
+      }
+    }
+
+    function renderPage(num) {
+      if (!pdfDoc) return;
+      pdfDoc.getPage(num).then(page => {
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+        const viewport = page.getViewport({ scale: zoomLevel });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        });
+
+        document.getElementById('pageInfo').textContent = `Página ${num} de ${pdfDoc.numPages}`;
+      }).catch(error => {
+        console.error('Error rendering PDF page:', error);
+        document.getElementById('pdfError').classList.remove('hidden');
+      });
+    }
+
+    // PDF controls
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (pageNum > 1) {
+        pageNum--;
+        renderPage(pageNum);
+      }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', () => {
+      if (pdfDoc && pageNum < pdfDoc.numPages) {
+        pageNum++;
+        renderPage(pageNum);
+      }
+    });
+
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      zoomLevel += 0.2;
+      renderPage(pageNum);
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      if (zoomLevel > 0.2) {
+        zoomLevel -= 0.2;
+        renderPage(pageNum);
+      }
+    });
+
+    // Full-screen handling
+    const pdfSection = document.getElementById('pdfSection');
+    const fullScreenBtn = document.getElementById('fullScreen');
+
+    fullScreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElementById) {
+        pdfSection.requestFullscreen().then(() => {
+          fullScreenBtn.textContent = 'Salir Pantalla Completa';
+          fullScreenBtn.classList.add('bg-blue-500', 'text-white');
+          fullScreenBtn.classList.remove('bg-gradient-to-r', 'from-gray-300', 'to-gray-400', 'text-gray-800');
+        }).catch(err => console.error('Error entering full-screen:', err));
+      } else {
+        document.exitFullscreen().then(() => {
+          resetFullScreenUI();
+        }).catch(err => console.error('Error exiting full-screen:', err));
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElementById) {
+        resetFullScreenUI();
+      }
+    });
+
+    function resetFullScreenUI() {
+      fullScreenBtn.textContent = 'Pantalla Completa';
+      fullScreenBtn.classList.remove('bg-blue-500', 'text-blue-500');
+      fullScreenBtn.classList.add('bg-gradient-to-r', 'from-gray-300', 'to-gray-400', 'text-gray-800');
+      renderPage(pageNum); // Ensure canvas re-renders
+    }
+
+    // Tab navigation
+    function showSection(sectionId) {
+      document.getElementById('testSection').classList.add('hidden');
+      document.getElementById('pdfSection').classList.add('hidden');
+      document.getElementById('tipsSection').classList.add('hidden');
+      document.getElementById(sectionId).classList.remove('hidden');
+
+      document.getElementById('testTab').classList.remove('bg-blue-600', 'text-white');
+      document.getElementById('pdfTab').classList.remove('bg-blue-600', 'text-white');
+      document.getElementById('tipsTab').classList.remove('bg-blue-600', 'text-white');
+      document.getElementById('testTab').classList.add('bg-gray-200', 'text-gray-800');
+      document.getElementById('pdfTab').classList.add('bg-gray-200', 'text-gray-800');
+      document.getElementById('tipsTab').classList.add('bg-gray-200', 'text-gray-800');
+
+      if (sectionId === 'testSection') {
+        document.getElementById('testTab').classList.add('bg-blue-600', 'text-blue-600');
+        document.getElementById('testTab').classList.remove('bg-blue-200', 'text-blue-800');
+      } else if (sectionId === 'pdfSection') {
+        document.getElementById('pdfTab').classList.add('bg-blue-600', 'text-blue-600');
+        document.getElementById('pdfTab').classList.remove('bg-blue-200', 'text-blue-800');
+      } else if (sectionId === 'tipsSection') {
+        document.getElementById('tipsTab').classList.add('bg-blue-600', 'text-blue-600');
+        document.getElementById('tipsTab').classList.remove('bg-blue-200', 'text-blue-800');
+      }
+    }
+
+    document.getElementById('testTab').addEventListener('click', () => showSection('testSection'));
+    document.getElementById('pdfTab').addEventListener('click', () => {
+      showSection('pdfSection');
+      if (!pdfDoc) loadPDF();
+    });
+    document.getElementById('tipsTab').addEventListener('click', () => showSection('tipsSection'));
+
+    // Initialize
+    initTest();
+    showSection('testSection');
+  </script>
+</body>
+
+</html>
