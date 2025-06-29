@@ -4,77 +4,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entrenamiento para Test de Ishihara</title>
+  <title>Entrenamiento para Test de Ishihara - Armada</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles/styles.css">
 </head>
 
-<body class="bg-gray-50 font-sans antialiased">
-  <header class="bg-white shadow-md sticky top-0 z-10">
+<body class="bg-gray-100 font-sans antialiased">
+  <header class="bg-white shadow-lg sticky top-0 z-10">
     <div class="container mx-auto p-4">
-      <h1 class="text-3xl font-bold text-center text-blue-700 md:text-4xl">Entrenamiento para el Test de Ishihara</h1>
+      <h1 class="text-2xl font-bold text-center text-blue-800 md:text-3xl lg:text-4xl">Entrenamiento para el Test de Ishihara - Armada</h1>
     </div>
   </header>
 
   <main class="container mx-auto p-4 md:p-6">
     <!-- Navigation Tabs -->
-    <div class="flex justify-center mb-6 shadow-lg rounded-lg overflow-hidden bg-white">
+    <div class="flex flex-wrap justify-center mb-6 shadow-lg rounded-lg overflow-hidden bg-white">
       <button id="testTab"
         class="flex-1 px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors md:text-base">Test</button>
+      <button id="trainingTab"
+        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Entrenamiento</button>
       <button id="pdfTab"
-        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Ver
-        PDF Oficial</button>
+        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Ver PDF Oficial</button>
       <button id="tipsTab"
         class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Consejos</button>
     </div>
 
     <!-- Test Section -->
-    <div id="testSection" class="hidden animate-fade-in">
+    <div id="testSection" class="animate-fade-in">
       <div id="testContainer" class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
-        <p id="remainingImages" class="mb-4 text-lg font-semibold text-center text-gray-700">Faltan 38 de 38 imágenes
-        </p>
-        <div class="flex justify-center gap-2 mb-4">
+        <p id="remainingImages" class="mb-4 text-lg font-semibold text-center text-gray-700">Faltan 38 de 38 imágenes</p>
+        <div class="flex justify-center gap-2 mb-4 relative z-20">
           <button id="zoomInImage"
-            class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-l-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md text-sm md:text-base">+
-            Zoom</button>
+            class="bg-blue-500 text-white px-4 py-2 rounded-l-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">+ Zoom</button>
           <button id="zoomOutImage"
-            class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-r-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md text-sm md:text-base">−
-            Zoom</button>
+            class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">− Zoom</button>
         </div>
-        <div class="overflow-auto min-h-[1000px] md:min-h-[1000px] flex justify-center">
-          <img id="ishiharaImage" src="" alt="Placa de Ishihara" class="max-w-full h-auto mb-4 rounded-lg">
+        <div class="flex justify-center items-center min-h-[250px] md:min-h-[350px] overflow-hidden">
+          <img id="ishiharaImage" src="" alt="Placa de Ishihara" class="max-w-full max-h-[60vh] md:max-h-[80vh] mb-4 rounded-lg transition-transform duration-200">
         </div>
-        <input id="userAnswer" type="text" placeholder="Ingresa lo que ves"
-          class="border border-gray-300 p-2 rounded-lg mb-4 w-full max-w-xs mx-auto focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
-        <button id="submitAnswer"
-          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md w-full max-w-xs mx-auto">Enviar</button>
-        <p id="resultMessage" class="mt-4 text-lg text-center text-gray-800"></p>
+        <div id="inputContainer" class="text-center">
+          <input id="userAnswer" type="text" placeholder="Ingresa lo que ves"
+            class="border border-gray-300 p-2 rounded-lg mb-4 w-full max-w-xs mx-auto focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
+          <button id="submitAnswer"
+            class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all shadow-md w-full max-w-xs mx-auto text-sm md:text-base">Enviar</button>
+        </div>
+        <div id="resultContainer" class="hidden text-center">
+          <button id="showResult"
+            class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md w-full max-w-xs mx-auto text-sm md:text-base">Mostrar Resultado</button>
+        </div>
+        <p id="resultMessage" class="mt-4 text-base md:text-lg text-center text-gray-800"></p>
         <button id="nextImage"
-          class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md mt-4 hidden w-full max-w-xs mx-auto">Siguiente</button>
+          class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md mt-4 hidden w-full max-w-xs mx-auto text-sm md:text-base">Siguiente</button>
       </div>
       <div id="resultsSection" class="hidden mt-8 animate-fade-in">
-        <h2 class="text-2xl font-bold text-center mb-6 text-blue-700 md:text-3xl">Resultados</h2>
+        <h2 class="text-xl md:text-2xl font-bold text-center mb-6 text-blue-800">Resultados</h2>
         <div class="overflow-x-auto">
           <table id="resultsTable" class="w-full border-collapse border border-gray-200 bg-white shadow-xl rounded-xl">
             <thead>
               <tr class="bg-gray-100">
-                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Imagen</th>
-                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Tu Respuesta</th>
-                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Respuesta Correcta (Visión
-                  Normal)</th>
-                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Respuesta Daltónica</th>
-                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Estado</th>
-                <th class="border border-gray-200 p-3 text-sm font-semibold md:text-base">Sugerencia</th>
+                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Imagen</th>
+                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Tu Respuesta</th>
+                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Respuesta Correcta (Visión Normal)</th>
+                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Respuesta Daltónica</th>
+                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Estado</th>
+                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Sugerencia</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-        <p id="diagnosis" class="mt-6 text-lg font-semibold text-center text-gray-800 md:text-xl"></p>
+        <p id="diagnosis" class="mt-6 text-base md:text-lg font-semibold text-center text-gray-800"></p>
         <div id="improvementTips" class="mt-8 bg-white p-6 md:p-8 rounded-xl shadow-xl">
-          <h3 class="text-xl font-bold text-center mb-4 text-blue-700 md:text-2xl">Consejos para Mejorar</h3>
-          <ul class="list-disc pl-6 text-gray-700">
+          <h3 class="text-lg md:text-xl font-bold text-center mb-4 text-blue-800">Consejos para Mejorar</h3>
+          <ul class="list-disc pl-6 text-gray-700 space-y-2 text-sm md:text-base">
             <li>Practica en un ambiente con luz natural para mejorar la percepción de colores.</li>
             <li>Enfócate en los bordes de los números o líneas para identificar patrones.</li>
             <li>Toma descansos cada 10-15 minutos para evitar fatiga visual.</li>
@@ -83,58 +86,76 @@
           </ul>
         </div>
         <button id="restartTest"
-          class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md mt-6 block mx-auto w-full max-w-xs">Reiniciar
-          Test</button>
+          class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md mt-6 block mx-auto w-full max-w-xs text-sm md:text-base">Reiniciar Test</button>
+      </div>
+    </div>
+
+    <!-- Training Section -->
+    <div id="trainingSection" class="hidden animate-fade-in">
+      <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
+        <h2 class="text-xl md:text-2xl font-bold text-center mb-6 text-blue-800">Entrenamiento para Memorizar el Test de Ishihara</h2>
+        <p class="mb-4 text-base md:text-lg text-center text-gray-700">Memoriza las placas para la prueba de la Armada</p>
+        <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-4">
+          <button id="prevCard"
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">Anterior</button>
+          <button id="nextCard"
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">Siguiente</button>
+          <button id="flipCard"
+            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all shadow-md text-sm md:text-base">Voltear</button>
+          <button id="markMemorized"
+            class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-all shadow-md text-sm md:text-base">Marcar como Memorizada</button>
+        </div>
+        <div class="flex justify-center items-center min-h-[250px] md:min-h-[350px] overflow-hidden">
+          <div id="flashcard" class="relative w-full max-w-md h-[300px] md:h-[400px] bg-gray-50 rounded-lg shadow-lg flex justify-center items-center">
+            <img id="flashcardImage" src="" alt="Placa de Ishihara" class="max-w-full max-h-[80%] rounded-lg transition-transform duration-200 hidden">
+            <p id="flashcardAnswer" class="text-base md:text-lg text-center text-gray-800 hidden p-4"></p>
+          </div>
+        </div>
+        <p id="progressText" class="mt-4 text-base md:text-lg text-center text-gray-700">Progreso: 0/38 placas memorizadas (0%)</p>
+        <button id="downloadGuide"
+          class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md mt-4 block mx-auto w-full max-w-xs text-sm md:text-base">Descargar Guía PDF</button>
       </div>
     </div>
 
     <!-- PDF Section -->
     <div id="pdfSection" class="hidden animate-fade-in">
-      <div id="pdfError" class="hidden text-red-600 mb-4 text-center">Error al cargar el PDF. Verifica que el archivo
+      <div id="pdfError" class="hidden text-red-600 mb-4 text-center text-sm md:text-base">Error al cargar el PDF. Verifica que el archivo
         'documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf' exista y que la página se ejecute desde un servidor local
         (por ejemplo, 'python -m http.server'). <a href="documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf"
           class="underline" download>Descargar PDF</a></div>
-      <div class="flex justify-between mb-4 gap-2">
-        <button id="zoomIn"
-          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">+
-          Zoom</button>
-        <button id="zoomOut"
-          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">−
-          Zoom</button>
+      <div class="flex flex-wrap justify-between mb-4 gap-2">
+        <button id="prevPage"
+          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md flex-1 text-sm md:text-base">Anterior</button>
+        <span id="pageInfo" class="self-center text-gray-700 text-sm md:text-base"></span>
+        <button id="nextPage"
+          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md flex-1 text-sm md:text-base">Siguiente</button>
         <button id="fullScreen"
-          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">Pantalla
-          Completa</button>
+          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md flex-1 text-sm md:text-base">Pantalla Completa</button>
       </div>
       <div class="bg-white p-4 rounded-xl shadow-xl">
         <canvas id="pdfCanvas" class="border border-gray-200 w-full rounded-lg"></canvas>
-      </div>
-      <div class="flex justify-between mt-4 gap-2">
-        <button id="prevPage"
-          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">Anterior</button>
-        <span id="pageInfo" class="self-center text-gray-700 text-sm md:text-base"></span>
-        <button id="nextPage"
-          class="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 px-4 py-2 rounded-lg hover:from-gray-400 hover:to-gray-500 transition-all shadow-md flex-1 text-sm md:text-base">Siguiente</button>
       </div>
     </div>
 
     <!-- Tips Section -->
     <div id="tipsSection" class="hidden mt-8 animate-fade-in">
       <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
-        <h2 class="text-2xl font-bold text-center mb-4 text-blue-700 md:text-3xl">Consejos para Mejorar en el Test de
-          Ishihara</h2>
-        <ul class="list-disc pl-6 text-gray-700">
-          <li>Practica en un ambiente con luz natural para distinguir mejor los colores.</li>
-          <li>Enfócate en los bordes de los números o patrones para identificarlos con mayor claridad.</li>
-          <li>Toma descansos frecuentes para evitar la fatiga visual, que puede afectar tu percepción.</li>
-          <li>Memoriza las respuestas correctas de cada placa practicando repetidamente.</li>
-          <li>Usa el visor de PDF para estudiar las placas oficiales y familiarizarte con los patrones.</li>
+        <h2 class="text-xl md:text-2xl font-bold text-center mb-4 text-blue-800">Consejos para la Prueba de la Armada</h2>
+        <ul class="list-disc pl-6 text-gray-700 space-y-2 text-sm md:text-base">
+          <li><strong>Memorización Estratégica:</strong> Usa la sección de Entrenamiento para memorizar las placas en orden. Repite cada placa hasta que la asocies con su número o patrón.</li>
+          <li><strong>Luz y Contraste:</strong> Practica en un ambiente con luz natural o luz blanca brillante, similar a las condiciones de la prueba oficial.</li>
+          <li><strong>Gestión del Tiempo:</strong> En la prueba real, tendrás un tiempo limitado por placa. Practica responder rápidamente en el modo de entrenamiento.</li>
+          <li><strong>Patrones Visuales:</strong> Aunque seas daltónico, enfócate en los bordes y contrastes de las figuras para identificar patrones memorizados.</li>
+          <li><strong>Descansos Visuales:</strong> Descansa tus ojos cada 10-15 minutos para evitar fatiga, lo que puede afectar tu percepción.</li>
+          <li><strong>Estudio Offline:</strong> Descarga la guía PDF desde la sección de Entrenamiento para estudiar las respuestas en cualquier momento.</li>
+          <li><strong>Simulación de Prueba:</strong> Usa el modo Test para simular las condiciones reales y practicar el ritmo de la prueba.</li>
         </ul>
       </div>
     </div>
   </main>
 
   <footer class="bg-white shadow-inner mt-8 py-4">
-    <div class="container mx-auto text-center text-gray-600 text-sm">
+    <div class="container mx-auto text-center text-gray-600 text-sm md:text-base">
       <p>Desarrollado para entrenamiento del Test de Ishihara | © 2025</p>
     </div>
   </footer>
@@ -142,74 +163,71 @@
   <script>
     // Correct answers for each Ishihara plate
     const correctAnswers = [
-      "Cualquier persona debería poder ver el número doce (12).",
-      "Visión normal: Deberían ver el número ocho (8). Visión con deficiencia rojo–verde: Verán el número tres (3).",
-      "Visión normal: Deberían ver el número seis (6). Visión con deficiencia rojo–verde: Verán el número cinco (5).",
-      "Visión normal: Deberían ver el número seis (6). Visión con deficiencia rojo–verde: Verán el número cinco (5).",
-      "Visión normal: Deberían ver el número veintinueve (29). Visión con deficiencia rojo–verde: Verán el número setenta (70).",
-      "Visión normal: Deberían ver el número cincuenta y siete (57). Visión con deficiencia rojo–verde: Verán el número treinta y cinco (35).",
-      "Visión normal: Deberían ver el número cinco (5). Visión con deficiencia rojo–verde: Verán el número dos (2).",
-      "Visión normal: Deberían ver el número tres (3). Visión con deficiencia rojo–verde: Verán el número cinco (5).",
-      "Visión normal: Deberían ver el número quince (15). Visión con deficiencia rojo–verde: Verán el número diecisiete (17).",
-      "Visión normal: Deberían ver el número setenta y cuatro (74). Visión con deficiencia rojo–verde: Verán el número veintiuno (21).",
-      "Visión normal: Deberían ver el número dos (2). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: Deberían ver el número seis (6). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: Deberían ver el número noventa y siete (97). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: Deberían ver el número cuarenta y cinco (45). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: Deberían ver el número cinco (5). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: Deberían ver el número siete (7). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: Deberían ver el número dieciséis (16). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: Deberían ver el número setenta y tres (73). Visión con deficiencia rojo–verde: La mayor parte de estas personas no verán nada significativo o ven algo mal.",
-      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número cinco (5).",
-      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número dos (2).",
-      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número cuarenta y cinco (45).",
-      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Deberían ver el número setenta y tres (73).",
-      "Visión normal: Deberían ver el número veintiséis (26). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número seis (6). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número dos (2).",
-      "Visión normal: Deberían ver el número cuarenta y dos (42). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número dos (2). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número cuatro (4).",
-      "Visión normal: Deberían ver el número treinta y cinco (35). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número cinco (5). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número tres (3).",
-      "Visión normal: Deberían ver el número noventa y seis (96). Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Deberían ver el número seis (6). Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Deberían ver el número nueve (9).",
-      "Visión normal: Verán puntos morados y rojos. Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Verán solo la línea morada. Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Verán solo la línea roja.",
-      "Visión normal: Verán puntos morados y rojos. Visión con Protanomalía (rojo débil) o Protanopía (rojo nulo): Verán solo la línea morada. Visión con Deuteranomalía (verde débil) o Deuteranopía (verde nulo): Verán solo la línea roja.",
-      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Una línea.",
-      "Visión normal: No deberían ver nada coherente. Visión con deficiencia rojo–verde: Una línea.",
-      "Visión normal: Verán una línea azul–verde. Visión con deficiencia rojo–verde: No deberían ver nada coherente.",
-      "Visión normal: Verán una línea azul–verde. Visión con deficiencia rojo–verde: No deberían ver nada coherente.",
-      "Visión normal: Verán una línea anaranjada. Visión con deficiencia rojo–verde: No deberían ver nada coherente o una falsa línea.",
-      "Visión normal: Verán una línea anaranjada. Visión con deficiencia rojo–verde: No deberían ver nada coherente o una falsa línea.",
-      "Visión normal: Verán una línea azul–verde y amarillo–verde. Visión con deficiencia rojo–verde: Sólo una línea rojo–verde y una línea violeta.",
-      "Visión normal: Verán una línea azul–verde y amarillo–verde. Visión con deficiencia rojo–verde: Sólo una línea azul–verde y una línea violeta.",
-      "Visión normal: Verán líneas violeta y naranja. Visión con deficiencia rojo–verde: Sólo una línea azul–verde y una línea violeta.",
-      "Visión normal: Verán líneas violeta y naranja. Visión con deficiencia rojo–verde: Sólo una línea azul–verde y una línea violeta.",
-      "Cualquier persona debería poder ver la misma línea."
+      "Cualquier persona debería ser capaz de ver claramente el número doce (12).",
+      "Visión normal: Debería visualizarse el número ocho (8). Deficiencia rojo–verde: Se percibe el número tres (3).",
+      "Visión normal: Se observa el número seis (6). Deficiencia rojo–verde: Se percibe el número cinco (5).",
+      "Visión normal: Debería verse el número veintinueve (29). Deficiencia rojo–verde: Se ve el número setenta (70).",
+      "Visión normal: Se identifica el número cincuenta y siete (57). Deficiencia rojo–verde: Se percibe el número treinta y cinco (35).",
+      "Visión normal: Se observa el número cinco (5). Deficiencia rojo–verde: Se ve el número dos (2).",
+      "Visión normal: Se visualiza el número tres (3). Deficiencia rojo–verde: Se percibe el número cinco (5).",
+      "Visión normal: Se distingue el número quince (15). Deficiencia rojo–verde: Se ve el número diecisiete (17).",
+      "Visión normal: Se aprecia el número setenta y cuatro (74). Deficiencia rojo–verde: Se percibe el número veintiuno (21).",
+      "Visión normal: Se debería ver el número dos (2). Deficiencia rojo–verde: La mayoría no verá ningún número claro o identificará uno incorrecto.",
+      "Visión normal: Se debería distinguir el número seis (6). Deficiencia rojo–verde: No se percibe un número claro o se interpreta incorrectamente.",
+      "Visión normal: Se identifica el número noventa y siete (97). Deficiencia rojo–verde: Generalmente no se ve nada significativo o se interpreta mal.",
+      "Visión normal: Se observa el número cuarenta y cinco (45). Deficiencia rojo–verde: No se identifica correctamente o no se distingue número alguno.",
+      "Visión normal: Se debería ver el número cinco (5). Deficiencia rojo–verde: No se percibe ningún número de forma clara.",
+      "Visión normal: Se visualiza el número siete (7). Deficiencia rojo–verde: La mayoría no verá un número claro.",
+      "Visión normal: Se distingue el número dieciséis (16). Deficiencia rojo–verde: No se percibe ningún número de forma significativa.",
+      "Visión normal: Se observa el número setenta y tres (73). Deficiencia rojo–verde: No se identifica un número coherente.",
+      "Visión normal: No se debería ver ningún número definido. Deficiencia rojo–verde: Se percibe el número cinco (5).",
+      "Visión normal: No se visualiza ningún número específico. Deficiencia rojo–verde: Se distingue el número dos (2).",
+      "Visión normal: No se reconoce ningún número. Deficiencia rojo–verde: Se percibe el número cuarenta y cinco (45).",
+      "Visión normal: No se identifica un número definido. Deficiencia rojo–verde: Se distingue el número setenta y tres (73).",
+      "Visión normal: Se observa el número veintiséis (26). Protanomalía / Protanopía: Se ve el número seis (6). Deuteranomalía / Deuteranopía: Se percibe el número dos (2).",
+      "Visión normal: Se distingue el número cuarenta y dos (42). Protanomalía / Protanopía: Se ve el número dos (2). Deuteranomalía / Deuteranopía: Se observa el número cuatro (4).",
+      "Visión normal: Se identifica el número treinta y cinco (35). Protanomalía / Protanopía: Se distingue el número cinco (5). Deuteranomalía / Deuteranopía: Se ve el número tres (3).",
+      "Visión normal: Se visualiza el número noventa y seis (96). Protanomalía / Protanopía: Se observa el número seis (6). Deuteranomalía / Deuteranopía: Se percibe el número nueve (9).",
+      "Visión normal: Se aprecian puntos morados y rojos. Protanomalía / Protanopía: Solo se ve la línea morada. Deuteranomalía / Deuteranopía: Solo se ve la línea roja.",
+      "Visión normal: Se observan puntos morados y rojos. Protanomalía / Protanopía: Solo se distingue la línea morada. Deuteranomalía / Deuteranopía: Solo se percibe la línea roja.",
+      "Visión normal: No se visualiza ningún patrón significativo. Deficiencia rojo–verde: Se distingue una línea.",
+      "Visión normal: No se percibe ninguna figura coherente. Deficiencia rojo–verde: Se observa una línea.",
+      "Visión normal: Se ve una línea de color azul–verde. Deficiencia rojo–verde: No se identifica nada relevante.",
+      "Visión normal: Se observa una línea azul–verde. Deficiencia rojo–verde: No se ve ninguna figura coherente.",
+      "Visión normal: Se distingue una línea anaranjada. Deficiencia rojo–verde: No se percibe nada claro o se ve una línea falsa.",
+      "Visión normal: Se observa una línea anaranjada. Deficiencia rojo–verde: No se identifica nada o se percibe una línea incorrecta.",
+      "Visión normal: Se visualizan dos líneas: una azul–verde y otra amarillo–verde. Deficiencia rojo–verde: Se ven solo dos líneas: una rojo–verde y otra violeta.",
+      "Visión normal: Se distinguen dos líneas: azul–verde y amarillo–verde. Deficiencia rojo–verde: Solo se observan una línea azul–verde y otra violeta.",
+      "Visión normal: Se ven claramente líneas de color violeta y naranja. Deficiencia rojo–verde: Se observa solo una línea azul–verde y otra violeta.",
+      "Visión normal: Se perciben líneas de color violeta y naranja. Deficiencia rojo–verde: Se observan solo una línea azul–verde y una violeta.",
+      "Cualquier persona, sin importar el tipo de visión, debería ser capaz de ver la misma línea con claridad."
     ];
 
     // Expected answers for normal vision
     const expectedNormalAnswers = [
-      "12", "8", "6", "6", "29", "57", "5", "3", "15", "74",
-      "2", "6", "97", "45", "5", "7", "16", "73", "", "", "", "",
+      "12", "8", "6", "29", "57", "5", "3", "15", "74", "2",
+      "6", "97", "45", "5", "7", "16", "73", "", "", "", "",
       "26", "42", "35", "96", "puntos morados y rojos", "puntos morados y rojos",
-      "", "", "línea azul–verde", "línea azul–verde", "línea anaranjada", "línea anaranjada",
-      "línea azul–verde y amarillo–verde", "línea azul–verde y amarillo–verde",
+      "", "", "línea azul-verde", "línea azul-verde", "línea anaranjada", "línea anaranjada",
+      "línea azul-verde y amarillo-verde", "línea azul-verde y amarillo-verde",
       "líneas violeta y naranja", "líneas violeta y naranja", "línea"
     ];
 
     // Expected answers for colorblind vision
     const expectedColorblindAnswers = [
-      "12", "3", "5", "5", "70", "35", "2", "5", "17", "21",
+      "12", "3", "5", "70", "35", "2", "5", "17", "21", "nada significativo",
       "nada significativo", "nada significativo", "nada significativo", "nada significativo",
-      "nada significativo", "nada significativo", "nada significativo", "nada significativo",
-      "5", "2", "45", "73", "6 o 2", "2 o 4", "5 o 3", "6 o 9",
-      "línea morada o línea roja", "línea morada o línea roja", "una línea", "una línea",
-      "nada coherente", "nada coherente", "nada coherente o falsa línea", "nada coherente o falsa línea",
-      "línea rojo–verde y violeta", "línea azul–verde y violeta", "línea azul–verde y violeta", "línea azul–verde y violeta",
-      "línea"
+      "nada significativo", "nada significativo", "nada significativo", "5", "2", "45", "73",
+      "6 o 2", "2 o 4", "5 o 3", "6 o 9", "línea morada o línea roja", "línea morada o línea roja",
+      "una línea", "una línea", "nada coherente", "nada coherente", "nada coherente o falsa línea",
+      "nada coherente o falsa línea", "línea rojo-verde y violeta", "línea azul-verde y violeta",
+      "línea azul-verde y violeta", "línea azul-verde y violeta", "línea"
     ];
 
     // Suggestions for incorrect answers
     const suggestions = [
       "",
       "Enfócate en los bordes superiores del número para distinguir el 8.",
-      "Observa el centro de la placa para identificar el 6.",
       "Observa el centro de la placa para identificar el 6.",
       "Cuenta los dígitos en el área central para ver el 29.",
       "Enfócate en la parte inferior para distinguir el 57.",
@@ -248,13 +266,20 @@
       ""
     ];
 
+    // Images without numbers (lines or colors)
+    const nonNumberImages = [18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38];
+
     let currentImageIndex = 0;
     let userResponses = [];
     let imageOrder = [];
     let pdfDoc = null;
     let pageNum = 1;
     let zoomLevel = 1;
-    let imageScale = 1; // For test image zoom
+    let imageScale = 1;
+    let currentCardIndex = 0;
+    let memorizedCards = new Set();
+    let cardOrder = [];
+    let isFront = true;
 
     // Function to colorize color names
     function colorizeText(text) {
@@ -283,14 +308,30 @@
       currentImageIndex = 0;
       userResponses = [];
       imageScale = 1;
-      document.getElementById('ishiharaImage').src = `imagenes/ishihara-image-${imageOrder[currentImageIndex]}.jpg`;
+      updateTestImage();
+    }
+
+    // Update test image and UI based on image type
+    function updateTestImage() {
+      const imgNum = imageOrder[currentImageIndex];
+      document.getElementById('ishiharaImage').src = `imagenes/ishihara-image-${imgNum}.jpg`;
       document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
       document.getElementById('userAnswer').value = '';
       document.getElementById('resultMessage').innerHTML = '';
       document.getElementById('nextImage').classList.add('hidden');
-      document.getElementById('submitAnswer').classList.remove('hidden');
-      document.getElementById('testContainer').classList.remove('hidden');
-      document.getElementById('resultsSection').classList('hidden');
+      document.getElementById('submitAnswer').classList.add('hidden');
+      document.getElementById('showResult').classList.add('hidden');
+      document.getElementById('inputContainer').classList.add('hidden');
+      document.getElementById('resultContainer').classList.add('hidden');
+
+      if (nonNumberImages.includes(imgNum)) {
+        document.getElementById('resultContainer').classList.remove('hidden');
+        document.getElementById('showResult').classList.remove('hidden');
+      } else {
+        document.getElementById('inputContainer').classList.remove('hidden');
+        document.getElementById('submitAnswer').classList.remove('hidden');
+      }
+
       updateRemainingImages();
     }
 
@@ -317,12 +358,21 @@
 
     // Handle answer submission
     document.getElementById('submitAnswer').addEventListener('click', () => {
-      const userAnswer = document.getElementById('userAnswer').value.trim();
+      const userAnswer = document.getElementById('userAnswer').value.trim().toLowerCase();
       userResponses.push(userAnswer);
       const message = correctAnswers[imageOrder[currentImageIndex] - 1].replace(/\. /g, '.<br>');
       document.getElementById('resultMessage').innerHTML = colorizeText(message);
       document.getElementById('nextImage').classList.remove('hidden');
       document.getElementById('submitAnswer').classList.add('hidden');
+    });
+
+    // Handle show result for non-number images
+    document.getElementById('showResult').addEventListener('click', () => {
+      userResponses.push('');
+      const message = correctAnswers[imageOrder[currentImageIndex] - 1].replace(/\. /g, '.<br>');
+      document.getElementById('resultMessage').innerHTML = colorizeText(message);
+      document.getElementById('nextImage').classList.remove('hidden');
+      document.getElementById('showResult').classList.add('hidden');
     });
 
     // Handle Enter key for submission
@@ -337,13 +387,7 @@
       currentImageIndex++;
       if (currentImageIndex < 38) {
         imageScale = 1;
-        document.getElementById('ishiharaImage').src = `imagenes/ishihara-image-${imageOrder[currentImageIndex]}.jpg`;
-        document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
-        document.getElementById('userAnswer').value = '';
-        document.getElementById('resultMessage').innerHTML = '';
-        document.getElementById('nextImage').classList.add('hidden');
-        document.getElementById('submitAnswer').classList.remove('hidden');
-        updateRemainingImages();
+        updateTestImage();
       } else {
         showResults();
       }
@@ -358,22 +402,22 @@
       let errors = 0;
 
       imageOrder.forEach((imgNum, i) => {
-        const userAnswer = userResponses[i];
+        const userAnswer = userResponses[i] || "";
         const correctAnswer = expectedNormalAnswers[imgNum - 1];
         const colorblindAnswer = expectedColorblindAnswers[imgNum - 1];
-        const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase() || (correctAnswer === '' && userAnswer === '');
+        const isCorrect = nonNumberImages.includes(imgNum) ? true : (userAnswer.toLowerCase() === correctAnswer.toLowerCase() || (correctAnswer === '' && userAnswer === ''));
         if (!isCorrect && correctAnswer !== '') errors++;
         const suggestion = isCorrect ? '' : suggestions[imgNum - 1];
 
         const row = document.createElement('tr');
         row.innerHTML = `
-                    <td class="border border-gray-200 p-3"><img src="imagenes/ishihara-image-${imgNum}.jpg" class="w-16 h-16 object-cover rounded-lg"></td>
-                    <td class="border border-gray-200 p-3">${userAnswer}</td>
-                    <td class="border border-gray-200 p-3">${colorizeText(correctAnswers[imgNum - 1].replace(/\. /g, '.<br>'))}</td>
-                    <td class="border border-gray-200 p-3">${colorizeText(colorblindAnswer)}</td>
-                    <td class="border border-gray-200 p-3 ${isCorrect ? 'text-green-600' : 'text-red-600'}">${isCorrect ? 'Correcto' : 'Incorrecto'}</td>
-                    <td class="border border-gray-200 p-3">${suggestion}</td>
-                `;
+          <td class="border border-gray-200 p-2 md:p-3"><img src="imagenes/ishihara-image-${imgNum}.jpg" class="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg"></td>
+          <td class="border border-gray-200 p-2 md:p-3">${userAnswer}</td>
+          <td class="border border-gray-200 p-2 md:p-3">${colorizeText(correctAnswers[imgNum - 1].replace(/\. /g, '.<br>'))}</td>
+          <td class="border border-gray-200 p-2 md:p-3">${colorizeText(colorblindAnswer)}</td>
+          <td class="border border-gray-200 p-2 md:p-3 ${isCorrect ? 'text-green-600' : 'text-red-600'}">${isCorrect ? 'Correcto' : 'Incorrecto'}</td>
+          <td class="border border-gray-200 p-2 md:p-3">${suggestion}</td>
+        `;
         tbody.appendChild(row);
       });
 
@@ -391,6 +435,78 @@
 
     // Restart test
     document.getElementById('restartTest').addEventListener('click', initTest);
+
+    // Initialize training
+    function initTraining() {
+      cardOrder = Array.from({ length: 38 }, (_, i) => i + 1);
+      currentCardIndex = 0;
+      isFront = true;
+      memorizedCards.clear();
+      updateFlashcard();
+      updateProgress();
+    }
+
+    // Update flashcard
+    function updateFlashcard() {
+      const imgNum = cardOrder[currentCardIndex];
+      const flashcardImage = document.getElementById('flashcardImage');
+      const flashcardAnswer = document.getElementById('flashcardAnswer');
+      flashcardImage.src = `imagenes/ishihara-image-${imgNum}.jpg`;
+      flashcardAnswer.innerHTML = colorizeText(correctAnswers[imgNum - 1].replace(/\. /g, '.<br>'));
+      if (isFront) {
+        flashcardImage.classList.remove('hidden');
+        flashcardAnswer.classList.add('hidden');
+      } else {
+        flashcardImage.classList.add('hidden');
+        flashcardAnswer.classList.remove('hidden');
+      }
+      document.getElementById('markMemorized').textContent = memorizedCards.has(imgNum) ? 'Desmarcar Memorizada' : 'Marcar como Memorizada';
+    }
+
+    // Update progress
+    function updateProgress() {
+      const progress = memorizedCards.size;
+      const percentage = Math.round((progress / 38) * 100);
+      document.getElementById('progressText').textContent = `Progreso: ${progress}/38 placas memorizadas (${percentage}%)`;
+    }
+
+    // Flashcard controls
+    document.getElementById('prevCard').addEventListener('click', () => {
+      if (currentCardIndex > 0) {
+        currentCardIndex--;
+        isFront = true;
+        updateFlashcard();
+      }
+    });
+
+    document.getElementById('nextCard').addEventListener('click', () => {
+      if (currentCardIndex < 37) {
+        currentCardIndex++;
+        isFront = true;
+        updateFlashcard();
+      }
+    });
+
+    document.getElementById('flipCard').addEventListener('click', () => {
+      isFront = !isFront;
+      updateFlashcard();
+    });
+
+    document.getElementById('markMemorized').addEventListener('click', () => {
+      const imgNum = cardOrder[currentCardIndex];
+      if (memorizedCards.has(imgNum)) {
+        memorizedCards.delete(imgNum);
+      } else {
+        memorizedCards.add(imgNum);
+      }
+      updateProgress();
+      updateFlashcard();
+    });
+
+    // Download guide
+    document.getElementById('downloadGuide').addEventListener('click', () => {
+      window.location.href = 'documents/ishihara_guide.tex';
+    });
 
     // PDF Viewer
     async function loadPDF() {
@@ -415,20 +531,26 @@
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
-        page.render({
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const renderContext = {
           canvasContext: ctx,
           viewport: viewport
-        });
+        };
 
-        document.getElementById('pageInfo').textContent = `Página ${num} de ${pdfDoc.numPages}`;
+        page.render(renderContext).promise.then(() => {
+          document.getElementById('pageInfo').textContent = `Página ${num} de ${pdfDoc.numPages}`;
+        }).catch(error => {
+          console.error('Error rendering PDF page:', error);
+          document.getElementById('pdfError').classList.remove('hidden');
+        });
       }).catch(error => {
-        console.error('Error rendering PDF page:', error);
+        console.error('Error getting PDF page:', error);
         document.getElementById('pdfError').classList.remove('hidden');
       });
     }
 
     // PDF controls
-    document.getElementById('prevPage').addEventListener('click', () => {
+ document.getElementById('prevPage').addEventListener('click', () => {
       if (pageNum > 1) {
         pageNum--;
         renderPage(pageNum);
@@ -442,28 +564,16 @@
       }
     });
 
-    document.getElementById('zoomIn').addEventListener('click', () => {
-      zoomLevel += 0.2;
-      renderPage(pageNum);
-    });
-
-    document.getElementById('zoomOut').addEventListener('click', () => {
-      if (zoomLevel > 0.2) {
-        zoomLevel -= 0.2;
-        renderPage(pageNum);
-      }
-    });
-
     // Full-screen handling
     const pdfSection = document.getElementById('pdfSection');
     const fullScreenBtn = document.getElementById('fullScreen');
 
     fullScreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElementById) {
+      if (!document.fullscreenElement) {
         pdfSection.requestFullscreen().then(() => {
           fullScreenBtn.textContent = 'Salir Pantalla Completa';
-          fullScreenBtn.classList.add('bg-blue-500', 'text-white');
-          fullScreenBtn.classList.remove('bg-gradient-to-r', 'from-gray-300', 'to-gray-400', 'text-gray-800');
+          fullScreenBtn.classList.add('bg-blue-600', 'text-white');
+          fullScreenBtn.classList.remove('bg-blue-500');
         }).catch(err => console.error('Error entering full-screen:', err));
       } else {
         document.exitFullscreen().then(() => {
@@ -473,45 +583,55 @@
     });
 
     document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElementById) {
+      if (!document.fullscreenElement) {
         resetFullScreenUI();
       }
     });
 
     function resetFullScreenUI() {
       fullScreenBtn.textContent = 'Pantalla Completa';
-      fullScreenBtn.classList.remove('bg-blue-500', 'text-blue-500');
-      fullScreenBtn.classList.add('bg-gradient-to-r', 'from-gray-300', 'to-gray-400', 'text-gray-800');
-      renderPage(pageNum); // Ensure canvas re-renders
+      fullScreenBtn.classList.remove('bg-blue-600', 'text-white');
+      fullScreenBtn.classList.add('bg-blue-500');
+      renderPage(pageNum);
     }
 
     // Tab navigation
     function showSection(sectionId) {
       document.getElementById('testSection').classList.add('hidden');
+      document.getElementById('trainingSection').classList.add('hidden');
       document.getElementById('pdfSection').classList.add('hidden');
       document.getElementById('tipsSection').classList.add('hidden');
       document.getElementById(sectionId).classList.remove('hidden');
 
       document.getElementById('testTab').classList.remove('bg-blue-600', 'text-white');
+      document.getElementById('trainingTab').classList.remove('bg-blue-600', 'text-white');
       document.getElementById('pdfTab').classList.remove('bg-blue-600', 'text-white');
       document.getElementById('tipsTab').classList.remove('bg-blue-600', 'text-white');
       document.getElementById('testTab').classList.add('bg-gray-200', 'text-gray-800');
+      document.getElementById('trainingTab').classList.add('bg-gray-200', 'text-gray-800');
       document.getElementById('pdfTab').classList.add('bg-gray-200', 'text-gray-800');
       document.getElementById('tipsTab').classList.add('bg-gray-200', 'text-gray-800');
 
       if (sectionId === 'testSection') {
-        document.getElementById('testTab').classList.add('bg-blue-600', 'text-blue-600');
-        document.getElementById('testTab').classList.remove('bg-blue-200', 'text-blue-800');
+        document.getElementById('testTab').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('testTab').classList.remove('bg-gray-200', 'text-gray-800');
+      } else if (sectionId === 'trainingSection') {
+        document.getElementById('trainingTab').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('trainingTab').classList.remove('bg-gray-200', 'text-gray-800');
       } else if (sectionId === 'pdfSection') {
-        document.getElementById('pdfTab').classList.add('bg-blue-600', 'text-blue-600');
-        document.getElementById('pdfTab').classList.remove('bg-blue-200', 'text-blue-800');
+        document.getElementById('pdfTab').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('pdfTab').classList.remove('bg-gray-200', 'text-gray-800');
       } else if (sectionId === 'tipsSection') {
-        document.getElementById('tipsTab').classList.add('bg-blue-600', 'text-blue-600');
-        document.getElementById('tipsTab').classList.remove('bg-blue-200', 'text-blue-800');
+        document.getElementById('tipsTab').classList.add('bg-blue-600', 'text-white');
+        document.getElementById('tipsTab').classList.remove('bg-gray-200', 'text-gray-800');
       }
     }
 
     document.getElementById('testTab').addEventListener('click', () => showSection('testSection'));
+    document.getElementById('trainingTab').addEventListener('click', () => {
+      showSection('trainingSection');
+      initTraining();
+    });
     document.getElementById('pdfTab').addEventListener('click', () => {
       showSection('pdfSection');
       if (!pdfDoc) loadPDF();

@@ -1,70 +1,280 @@
 /* Custom animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
 /* General styles */
 .container {
-    max-width: 1200px;
+  max-width: 1280px;
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #ishiharaImage {
-    transition: transform 0.2s ease;
-    transform-origin: center center;
+  transition: transform 0.2s ease;
+  transform-origin: center center;
+  max-width: 100%;
+  max-height: 60vh;
+}
+
+#flashcard {
+  transition: transform 0.5s ease;
+}
+
+#flashcardImage, #flashcardAnswer {
+  max-width: 100%;
+  max-height: 80%;
 }
 
 #pdfCanvas {
-    max-width: 100%;
-    height: auto;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+}
+
+/* Ensure zoom buttons are always visible */
+#testContainer .flex.gap-2 {
+  position: relative;
+  z-index: 20;
 }
 
 /* Responsive adjustments */
-@media (max-width: 640px) {
-    h1 {
-        font-size: 1.75rem;
-    }
+@media (max-width: 320px) {
+  h1 {
+    font-size: 1.25rem;
+  }
 
-    #ishiharaImage {
-        max-width: 100%;
-    }
+  #ishiharaImage, #flashcardImage {
+    max-height: 40vh;
+  }
 
-    #resultsTable img {
-        width: 48px;
-        height: 48px;
-    }
+  #resultsTable img {
+    width: 40px;
+    height: 40px;
+  }
 
-    #resultsTable th, #resultsTable td {
-        font-size: 0.75rem;
-        padding: 0.5rem;
-    }
+  #resultsTable th, #resultsTable td {
+    font-size: 0.65rem;
+    padding: 0.4rem;
+  }
 
-    button {
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-    }
+  button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    min-height: 48px;
+    min-width: 48px;
+  }
 
-    input {
-        max-width: 180px;
-        font-size: 0.875rem;
-    }
+  input {
+    max-width: 180px;
+    font-size: 0.875rem;
+    padding: 0.75rem;
+  }
 
-    #imageContainer {
-        min-height: 1200px;
-    }
+  .min-h-[250px] {
+    min-height: 200px;
+  }
+
+  #flashcard {
+    height: 250px;
+  }
+
+  #resultMessage, #progressText, #pageInfo, #pdfError, .list-disc li {
+    font-size: 0.875rem;
+  }
 }
 
-@media (min-width: 768px) {
-    #resultsTable th, #resultsTable td {
-        font-size: 0.875rem;
-        padding: 0.75rem;
-    }
+@media (min-width: 321px) and (max-width: 640px) {
+  h1 {
+    font-size: 1.5rem;
+  }
 
-    #imageContainer {
-        min-height: 1200px;
-    }
+  #ishiharaImage, #flashcardImage {
+    max-height: 50vh;
+  }
+
+  #resultsTable img {
+    width: 48px;
+    height: 48px;
+  }
+
+  #resultsTable th, #resultsTable td {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  input {
+    max-width: 200px;
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .min-h-[250px] {
+    min-height: 250px;
+  }
+
+  #flashcard {
+    height: 300px;
+  }
+
+  #resultMessage, #progressText, #pageInfo, #pdfError, .list-disc li {
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  #ishiharaImage, #flashcardImage {
+    max-height: 60vh;
+  }
+
+  #resultsTable img {
+    width: 60px;
+    height: 60px;
+  }
+
+  #resultsTable th, #resultsTable td {
+    font-size: 0.875rem;
+    padding: 0.75rem;
+  }
+
+  button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  input {
+    max-width: 250px;
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .min-h-[250px] {
+    min-height: 300px;
+  }
+
+  #flashcard {
+    height: 350px;
+  }
+
+  #resultMessage, #progressText, #pageInfo, #pdfError, .list-disc li {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  #ishiharaImage, #flashcardImage {
+    max-height: 70vh;
+  }
+
+  #resultsTable img {
+    width: 80px;
+    height: 80px;
+  }
+
+  #resultsTable th, #resultsTable td {
+    font-size: 0.875rem;
+    padding: 1rem;
+  }
+
+  button {
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  input {
+    max-width: 300px;
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .min-h-[350px] {
+    min-height: 350px;
+  }
+
+  #flashcard {
+    height: 400px;
+  }
+
+  #resultMessage, #progressText, #pageInfo, #pdfError, .list-disc li {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  h1 {
+    font-size: 2.25rem;
+  }
+
+  #ishiharaImage, #flashcardImage {
+    max-height: 80vh;
+  }
+
+  #resultsTable img {
+    width: 100px;
+    height: 100px;
+  }
+
+  #resultsTable th, #resultsTable td {
+    font-size: 1rem;
+    padding: 1rem;
+  }
+
+  button {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  input {
+    max-width: 350px;
+    font-size: 1.125rem;
+    padding: 1rem;
+  }
+
+  .min-h-[350px] {
+    min-height: 400px;
+  }
+
+  #flashcard {
+    height: 450px;
+  }
+
+  #resultMessage, #progressText, #pageInfo, #pdfError, .list-disc li {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
