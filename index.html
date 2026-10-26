@@ -1,647 +1,835 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test & Entrenamiento para Test de Ishihara</title>
+  <title>Prueba orientativa de visión del color</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles/styles.css">
+  <style>
+    /* Accesibilidad: nunca comunicamos sólo con color */
+    .state-ok::before    { content: "✓ "; font-weight: 700; }
+    .state-fail::before  { content: "✗ "; font-weight: 700; }
+    .state-info::before  { content: "• "; font-weight: 700; }
+    .d15-track { display:flex; flex-wrap:wrap; gap:6px; padding:10px; border:2px dashed #666; border-radius:10px; min-height:70px; background:#f5f5f5; }
+    .d15-cap { width:46px; height:46px; border-radius:50%; border:3px solid #222; cursor:grab; position:relative; touch-action:none; }
+    .d15-cap.pilot { border-color:#000; border-width:4px; cursor:not-allowed; outline:2px dashed #000; outline-offset:2px; }
+    .d15-cap[draggable="true"]:active { cursor:grabbing; }
+    .d15-cap .lbl { position:absolute; bottom:-18px; left:0; right:0; text-align:center; font-size:11px; color:#000; }
+    .d15-slot { outline:2px dashed transparent; }
+    .d15-slot.over { outline-color:#1d4ed8; }
+    .plate-canvas { display:block; margin:0 auto; border-radius:50%; background:#000; }
+  </style>
 </head>
-
 <body class="bg-gray-100 font-sans antialiased">
   <header class="bg-white shadow-lg sticky top-0 z-10">
     <div class="container mx-auto p-4">
-      <h1 class="text-2xl font-bold text-center text-blue-800 md:text-3xl lg:text-4xl">Test & Entrenamiento para el Test de Ishihara</h1>
+      <h1 class="text-xl font-bold text-center text-blue-800 md:text-2xl">Prueba orientativa de visión del color</h1>
+      <p class="text-center text-gray-600 text-xs md:text-sm mt-1">Láminas pseudoisocromáticas generadas por código + ordenamiento D-15 · Resultado orientativo, no diagnóstico médico.</p>
     </div>
   </header>
 
   <main class="container mx-auto p-4 md:p-6">
-    <!-- Navigation Tabs -->
-    <div class="flex flex-wrap justify-center mb-6 shadow-lg rounded-lg overflow-hidden bg-white">
-      <button id="testTab"
-        class="flex-1 px-4 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors md:text-base">Test</button>
-      <button id="trainingTab"
-        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Entrenamiento</button>
-      <button id="pdfTab"
-        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Ver PDF Oficial</button>
-      <button id="tipsTab"
-        class="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors md:text-base">Consejos</button>
+    <div class="flex flex-wrap justify-center mb-6 shadow-lg rounded-lg overflow-hidden bg-white" role="tablist">
+      <button id="prepTab"   class="flex-1 px-4 py-3 text-sm font-semibold bg-blue-600 text-white md:text-base">1. Preparación</button>
+      <button id="plateTab"  class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base" disabled>2. Láminas</button>
+      <button id="d15Tab"    class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base" disabled>3. Ordenamiento</button>
+      <button id="resultTab" class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base" disabled>4. Resultado</button>
+      <button id="pdfTab"    class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base">PDF oficial</button>
     </div>
 
-    <!-- Test Section -->
-    <div id="testSection" class="animate-fade-in">
-      <div id="testContainer" class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
-        <p id="remainingImages" class="mb-4 text-lg font-semibold text-center text-gray-700">Faltan 38 de 38 imágenes</p>
-        <div class="flex justify-center gap-2 mb-4 relative z-20">
-          <button id="zoomInImage"
-            class="bg-blue-500 text-white px-4 py-2 rounded-l-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">+ Zoom</button>
-          <button id="zoomOutImage"
-            class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">− Zoom</button>
-        </div>
-        <div class="flex justify-center items-center min-h-[250px] md:min-h-[350px] overflow-hidden">
-          <img id="ishiharaImage" src="" alt="Placa de Ishihara" class="max-w-full max-h-[60vh] md:max-h-[80vh] mb-4 rounded-lg transition-transform duration-200">
-        </div>
-        <div id="inputContainer" class="text-center">
-          <input id="userAnswer" type="text" placeholder="Ingresa lo que ves"
-            class="border border-gray-300 p-2 rounded-lg mb-4 w-full max-w-xs mx-auto focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
-          <button id="submitAnswer"
-            class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all shadow-md w-full max-w-xs mx-auto text-sm md:text-base">Enviar</button>
-        </div>
-        <div id="resultContainer" class="hidden text-center">
-          <button id="showResult"
-            class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md w-full max-w-xs mx-auto text-sm md:text-base">Mostrar Resultado</button>
-        </div>
-        <p id="resultMessage" class="mt-4 text-base md:text-lg text-center text-gray-800"></p>
-        <button id="nextImage"
-          class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md mt-4 hidden w-full max-w-xs mx-auto text-sm md:text-base">Siguiente</button>
+    <!-- 1. PREPARACIÓN -->
+    <section id="prepSection" class="animate-fade-in">
+      <div class="bg-white p-6 rounded-xl shadow-xl">
+        <h2 class="text-lg md:text-xl font-bold mb-4 text-blue-800">Antes de empezar</h2>
+        <p class="text-gray-700 mb-4 text-sm md:text-base">Para que el resultado sea útil, tu pantalla no puede estar alterando los colores. Confirma cada punto antes de continuar.</p>
+        <form id="prepForm" class="space-y-3 text-sm md:text-base">
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span><strong>Brillo al máximo</strong> (o cerca). Mira la lámina de control desde ~50 cm.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé <strong>modo nocturno / Night Shift / Night Light / f.lux</strong>.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé el <strong>filtro de luz azul</strong> del navegador y del sistema.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé el <strong>ajuste automático de color/temperatura</strong> (TrueTone, adaptive color).</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>No estoy usando filtros de accesibilidad de color del sistema operativo.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Luz ambiente suave, no reflejos directos sobre la pantalla.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Entiendo que esto es <strong>orientativo</strong>, no un diagnóstico médico.</span></label>
+          <button id="startBtn" type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 w-full md:w-auto">Empezar</button>
+        </form>
       </div>
-      <div id="resultsSection" class="hidden mt-8 animate-fade-in">
-        <h2 class="text-xl md:text-2xl font-bold text-center mb-6 text-blue-800">Resultados</h2>
-        <div class="overflow-x-auto">
-          <table id="resultsTable" class="w-full border-collapse border border-gray-200 bg-white shadow-xl rounded-xl">
-            <thead>
-              <tr class="bg-gray-100">
-                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Imagen</th>
-                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Tu Respuesta</th>
-                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Respuesta Correcta (Visión Normal)</th>
-                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Respuesta Daltónica</th>
-                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Estado</th>
-                <th class="border border-gray-200 p-2 md:p-3 text-xs md:text-sm font-semibold">Sugerencia</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <p id="diagnosis" class="mt-6 text-base md:text-lg font-semibold text-center text-gray-800"></p>
-        <div id="improvementTips" class="mt-8 bg-white p-6 md:p-8 rounded-xl shadow-xl">
-          <h3 class="text-lg md:text-xl font-bold text-center mb-4 text-blue-800">Consejos para Mejorar</h3>
-          <ul class="list-disc pl-6 text-gray-700 space-y-2 text-sm md:text-base">
-            <li>Practica en un ambiente con luz natural para mejorar la percepción de colores.</li>
-            <li>Enfócate en los bordes de los números o líneas para identificar patrones.</li>
-            <li>Toma descansos cada 10-15 minutos para evitar fatiga visual.</li>
-            <li>Repite el test varias veces para memorizar las respuestas correctas.</li>
-            <li>Consulta el PDF oficial para estudiar las placas en detalle.</li>
-          </ul>
-        </div>
-        <button id="restartTest"
-          class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md mt-6 block mx-auto w-full max-w-xs text-sm md:text-base">Reiniciar Test</button>
-      </div>
-    </div>
+    </section>
 
-    <!-- Training Section -->
-    <div id="trainingSection" class="hidden animate-fade-in">
-      <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
-        <h2 class="text-xl md:text-2xl font-bold text-center mb-6 text-blue-800">Entrenamiento para Memorizar el Test de Ishihara</h2>
-        <p class="mb-4 text-base md:text-lg text-center text-gray-700">Memoriza las placas del test de Ishihara</p>
-        <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-4">
-          <button id="prevCard"
-            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">Anterior</button>
-          <button id="nextCard"
-            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md text-sm md:text-base">Siguiente</button>
-          <button id="flipCard"
-            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all shadow-md text-sm md:text-base">Voltear</button>
-          <button id="markMemorized"
-            class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-all shadow-md text-sm md:text-base">Marcar como Memorizada</button>
-        </div>
-        <div class="flex justify-center items-center min-h-[250px] md:min-h-[350px] overflow-hidden">
-          <div id="flashcard" class="relative w-full max-w-md h-[300px] md:h-[400px] bg-gray-50 rounded-lg shadow-lg flex justify-center items-center">
-            <img id="flashcardImage" src="" alt="Placa de Ishihara" class="max-w-full max-h-[80%] rounded-lg transition-transform duration-200 hidden">
-            <p id="flashcardAnswer" class="text-base md:text-lg text-center text-gray-800 hidden p-4"></p>
+    <!-- 2. LÁMINAS -->
+    <section id="plateSection" class="hidden animate-fade-in">
+      <div class="bg-white p-6 rounded-xl shadow-xl">
+        <p id="plateProgress" class="text-center text-gray-700 mb-3 text-sm md:text-base"></p>
+        <canvas id="plateCanvas" class="plate-canvas" width="520" height="520" aria-label="Lámina pseudoisocromática"></canvas>
+        <div class="mt-4 text-center">
+          <label for="plateAnswer" class="block text-sm text-gray-700 mb-2">¿Qué número ves? (sólo dígitos)</label>
+          <input id="plateAnswer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" class="border p-2 rounded text-center w-40">
+          <div class="flex flex-wrap gap-2 justify-center mt-3">
+            <button id="plateSubmit" class="bg-green-600 text-white px-4 py-2 rounded">Responder</button>
+            <button id="plateSkip" class="bg-gray-500 text-white px-4 py-2 rounded">No veo ningún número</button>
           </div>
         </div>
-        <p id="progressText" class="mt-4 text-base md:text-lg text-center text-gray-700">Progreso: 0/38 placas memorizadas (0%)</p>
-        <button id="downloadGuide"
-          class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md mt-4 block mx-auto w-full max-w-xs text-sm md:text-base">Descargar Guía PDF</button>
       </div>
-    </div>
+    </section>
 
-    <!-- PDF Section -->
-    <div id="pdfSection" class="hidden animate-fade-in">
-      <div id="pdfError" class="hidden text-red-600 mb-4 text-center text-sm md:text-base">Error al cargar el PDF. Verifica que el archivo
-        'documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf' exista y que la página se ejecute desde un servidor local
-        (por ejemplo, 'python -m http.server'). <a href="documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf"
-          class="underline" download>Descargar PDF</a></div>
+    <!-- 3. D-15 -->
+    <section id="d15Section" class="hidden animate-fade-in">
+      <div class="bg-white p-6 rounded-xl shadow-xl">
+        <h2 class="text-lg md:text-xl font-bold mb-3 text-blue-800">Ordenamiento de tonos (D-15 simplificado)</h2>
+        <p class="text-gray-700 text-sm md:text-base mb-3">Arrastra las fichas de la <strong>reserva</strong> a la <strong>fila ordenada</strong>. La ficha fija es tu punto de partida; coloca el resto de forma que cada una se parezca lo más posible a la anterior. También podés arrastrar fichas ya puestas para reordenarlas.</p>
+        <p class="text-sm text-gray-600 mb-2 state-info">Fila ordenada (arrastrá aquí):</p>
+        <div id="d15Order" class="d15-track" aria-label="Fila ordenada"></div>
+        <p class="text-sm text-gray-600 mt-4 mb-2 state-info">Reserva (fichas por colocar):</p>
+        <div id="d15Pool" class="d15-track" aria-label="Reserva de fichas"></div>
+        <div class="text-center mt-4">
+          <button id="d15Submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg">Terminar y ver resultado</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. RESULTADO -->
+    <section id="resultSection" class="hidden animate-fade-in">
+      <div class="bg-white p-6 rounded-xl shadow-xl">
+        <h2 class="text-xl md:text-2xl font-bold mb-2 text-blue-800">Resultado orientativo</h2>
+        <div id="verdict" class="p-4 rounded-lg border-2 border-gray-300 bg-gray-50 mb-4 text-base md:text-lg"></div>
+        <h3 class="font-bold mb-2">Datos que lo respaldan</h3>
+        <div id="breakdown" class="text-sm md:text-base overflow-x-auto"></div>
+        <h3 class="font-bold mt-4 mb-2">Diagrama del ordenamiento D-15</h3>
+        <canvas id="d15Diagram" width="420" height="420" class="mx-auto block border border-gray-300 rounded"></canvas>
+        <p class="text-xs text-gray-600 mt-2 text-center">Las líneas que cruzan el círculo coinciden con un eje de confusión; el eje aproximado se marca en negro.</p>
+        <p class="text-xs text-gray-500 mt-4 italic">Esto es un resultado orientativo generado por software en una pantalla no calibrada. Un diagnóstico formal requiere un examen con un profesional (optómetra u oftalmólogo) en condiciones controladas.</p>
+        <div class="text-center mt-4">
+          <button id="restart" class="bg-gray-600 text-white px-4 py-2 rounded">Reiniciar</button>
+          <button id="exportResult" class="bg-gray-500 text-white px-4 py-2 rounded">Copiar resumen</button>
+          <button id="exportPDF" class="bg-blue-600 text-white px-4 py-2 rounded">Descargar informe PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PDF -->
+    <section id="pdfSection" class="hidden animate-fade-in">
+      <div id="pdfError" class="hidden text-red-600 mb-4 text-center text-sm">No se pudo cargar el PDF. Servilo desde un servidor local (p. ej. <code>python -m http.server</code>). <a class="underline" href="documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf" download>Descargar</a></div>
       <div class="flex flex-wrap justify-between mb-4 gap-2">
-        <button id="prevPage"
-          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md flex-1 text-sm md:text-base">Anterior</button>
-        <span id="pageInfo" class="self-center text-gray-700 text-sm md:text-base"></span>
-        <button id="nextPage"
-          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md flex-1 text-sm md:text-base">Siguiente</button>
-        <button id="fullScreen"
-          class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow-md flex-1 text-sm md:text-base">Pantalla Completa</button>
+        <button id="prevPage" class="bg-blue-500 text-white px-4 py-2 rounded flex-1">Anterior</button>
+        <span id="pageInfo" class="self-center text-gray-700 text-sm"></span>
+        <button id="nextPage" class="bg-blue-500 text-white px-4 py-2 rounded flex-1">Siguiente</button>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow-xl">
-        <canvas id="pdfCanvas" class="border border-gray-200 w-full rounded-lg"></canvas>
-      </div>
-    </div>
-
-    <!-- Tips Section -->
-    <div id="tipsSection" class="hidden mt-8 animate-fade-in">
-      <div class="bg-white p-6 md:p-8 rounded-xl shadow-xl">
-        <h2 class="text-xl md:text-2xl font-bold text-center mb-4 text-blue-800">Consejos para la Prueba de Ishihara</h2>
-        <ul class="list-disc pl-6 text-gray-700 space-y-2 text-sm md:text-base">
-          <li><strong>Memorización Estratégica:</strong> Usa la sección de Entrenamiento para memorizar las placas en orden. Repite cada placa hasta que la asocies con su número o patrón.</li>
-          <li><strong>Luz y Contraste:</strong> Practica en un ambiente con luz natural o luz blanca brillante, similar a las condiciones de la prueba oficial.</li>
-          <li><strong>Gestión del Tiempo:</strong> En la prueba real, tendrás un tiempo limitado por placa. Practica responder rápidamente en el modo de entrenamiento.</li>
-          <li><strong>Patrones Visuales:</strong> Aunque seas daltónico, enfócate en los bordes y contrastes de las figuras para identificar patrones memorizados.</li>
-          <li><strong>Descansos Visuales:</strong> Descansa tus ojos cada 10-15 minutos para evitar fatiga, lo que puede afectar tu percepción.</li>
-          <li><strong>Estudio Offline:</strong> Descarga la guía PDF desde la sección de Entrenamiento para estudiar las respuestas en cualquier momento.</li>
-          <li><strong>Simulación de Prueba:</strong> Usa el modo Test para simular las condiciones reales y practicar el ritmo de la prueba.</li>
-        </ul>
-      </div>
-    </div>
+      <div class="bg-white p-4 rounded-xl shadow-xl"><canvas id="pdfCanvas" class="border border-gray-200 w-full rounded-lg"></canvas></div>
+    </section>
   </main>
 
   <footer class="bg-white shadow-inner mt-8 py-4">
-    <div class="container mx-auto text-center text-gray-600 text-sm md:text-base">
-      <p>Desarrollado para entrenamiento del Test de Ishihara | © 2025</p>
+    <div class="container mx-auto text-center text-gray-600 text-xs md:text-sm">
+      <p>Prueba orientativa de visión del color · uso personal</p>
     </div>
   </footer>
 
-  <script>
-    // Correct answers for each Ishihara plate
-    const correctAnswers = [
-      "Cualquier persona debería ser capaz de ver claramente el número doce (12).",
-      "Visión normal: Debería visualizarse el número ocho (8). Deficiencia rojo–verde: Se percibe el número tres (3).",
-      "Visión normal: Se observa el número seis (6). Deficiencia rojo–verde: Se percibe el número cinco (5).",
-      "Visión normal: Debería verse el número veintinueve (29). Deficiencia rojo–verde: Se ve el número setenta (70).",
-      "Visión normal: Se identifica el número cincuenta y siete (57). Deficiencia rojo–verde: Se percibe el número treinta y cinco (35).",
-      "Visión normal: Se observa el número cinco (5). Deficiencia rojo–verde: Se ve el número dos (2).",
-      "Visión normal: Se visualiza el número tres (3). Deficiencia rojo–verde: Se percibe el número cinco (5).",
-      "Visión normal: Se distingue el número quince (15). Deficiencia rojo–verde: Se ve el número diecisiete (17).",
-      "Visión normal: Se aprecia el número setenta y cuatro (74). Deficiencia rojo–verde: Se percibe el número veintiuno (21).",
-      "Visión normal: Se debería ver el número dos (2). Deficiencia rojo–verde: La mayoría no verá ningún número claro o identificará uno incorrecto.",
-      "Visión normal: Se debería distinguir el número seis (6). Deficiencia rojo–verde: No se percibe un número claro o se interpreta incorrectamente.",
-      "Visión normal: Se identifica el número noventa y siete (97). Deficiencia rojo–verde: Generalmente no se ve nada significativo o se interpreta mal.",
-      "Visión normal: Se observa el número cuarenta y cinco (45). Deficiencia rojo–verde: No se identifica correctamente o no se distingue número alguno.",
-      "Visión normal: Se debería ver el número cinco (5). Deficiencia rojo–verde: No se percibe ningún número de forma clara.",
-      "Visión normal: Se visualiza el número siete (7). Deficiencia rojo–verde: La mayoría no verá un número claro.",
-      "Visión normal: Se distingue el número dieciséis (16). Deficiencia rojo–verde: No se percibe ningún número de forma significativa.",
-      "Visión normal: Se observa el número setenta y tres (73). Deficiencia rojo–verde: No se identifica un número coherente.",
-      "Visión normal: No se debería ver ningún número definido. Deficiencia rojo–verde: Se percibe el número cinco (5).",
-      "Visión normal: No se visualiza ningún número específico. Deficiencia rojo–verde: Se distingue el número dos (2).",
-      "Visión normal: No se reconoce ningún número. Deficiencia rojo–verde: Se percibe el número cuarenta y cinco (45).",
-      "Visión normal: No se identifica un número definido. Deficiencia rojo–verde: Se distingue el número setenta y tres (73).",
-      "Visión normal: Se observa el número veintiséis (26). Protanomalía / Protanopía: Se ve el número seis (6). Deuteranomalía / Deuteranopía: Se percibe el número dos (2).",
-      "Visión normal: Se distingue el número cuarenta y dos (42). Protanomalía / Protanopía: Se ve el número dos (2). Deuteranomalía / Deuteranopía: Se observa el número cuatro (4).",
-      "Visión normal: Se identifica el número treinta y cinco (35). Protanomalía / Protanopía: Se distingue el número cinco (5). Deuteranomalía / Deuteranopía: Se ve el número tres (3).",
-      "Visión normal: Se visualiza el número noventa y seis (96). Protanomalía / Protanopía: Se observa el número seis (6). Deuteranomalía / Deuteranopía: Se percibe el número nueve (9).",
-      "Visión normal: Se aprecian puntos morados y rojos. Protanomalía / Protanopía: Solo se ve la línea morada. Deuteranomalía / Deuteranopía: Solo se ve la línea roja.",
-      "Visión normal: Se observan puntos morados y rojos. Protanomalía / Protanopía: Solo se distingue la línea morada. Deuteranomalía / Deuteranopía: Solo se percibe la línea roja.",
-      "Visión normal: No se visualiza ningún patrón significativo. Deficiencia rojo–verde: Se distingue una línea.",
-      "Visión normal: No se percibe ninguna figura coherente. Deficiencia rojo–verde: Se observa una línea.",
-      "Visión normal: Se ve una línea de color azul–verde. Deficiencia rojo–verde: No se identifica nada relevante.",
-      "Visión normal: Se observa una línea azul–verde. Deficiencia rojo–verde: No se ve ninguna figura coherente.",
-      "Visión normal: Se distingue una línea anaranjada. Deficiencia rojo–verde: No se percibe nada claro o se ve una línea falsa.",
-      "Visión normal: Se observa una línea anaranjada. Deficiencia rojo–verde: No se identifica nada o se percibe una línea incorrecta.",
-      "Visión normal: Se visualizan dos líneas: una azul–verde y otra amarillo–verde. Deficiencia rojo–verde: Se ven solo dos líneas: una rojo–verde y otra violeta.",
-      "Visión normal: Se distinguen dos líneas: azul–verde y amarillo–verde. Deficiencia rojo–verde: Solo se observan una línea azul–verde y otra violeta.",
-      "Visión normal: Se ven claramente líneas de color violeta y naranja. Deficiencia rojo–verde: Se observa solo una línea azul–verde y otra violeta.",
-      "Visión normal: Se perciben líneas de color violeta y naranja. Deficiencia rojo–verde: Se observan solo una línea azul–verde y una violeta.",
-      "Cualquier persona, sin importar el tipo de visión, debería ser capaz de ver la misma línea con claridad."
-    ];
+<script>
+/* =========================================================================
+   COLOR SCIENCE
+   -------------------------------------------------------------------------
+   Láminas pseudoisocromáticas: figura y fondo elegidos sobre la línea de
+   confusión del defecto (protan, deutan o tritan) en CIE xy.
 
-    // Expected answers for normal vision
-    const expectedNormalAnswers = [
-      "12", "8", "6", "29", "57", "5", "3", "15", "74", "2",
-      "6", "97", "45", "5", "7", "16", "73", "", "", "", "",
-      "26", "42", "35", "96", "puntos morados y rojos", "puntos morados y rojos",
-      "", "", "línea azul-verde", "línea azul-verde", "línea anaranjada", "línea anaranjada",
-      "línea azul-verde y amarillo-verde", "línea azul-verde y amarillo-verde",
-      "líneas violeta y naranja", "líneas violeta y naranja", "línea"
-    ];
+   Procedimiento (comentado para auditoría):
+   1) Blanco de referencia: D65 ≈ (0.3127, 0.3290).
+   2) Puntos copunctales clásicos (donde todas las líneas de confusión
+      convergen para cada tipo):
+         protan  (0.747,  0.253)
+         deutan  (1.080, -0.800)
+         tritan  (0.171,  0.000)
+   3) Para cada tipo, la línea de confusión que pasa por D65 es la recta
+      D65 → copunctal. Elegimos dos cromaticidades sobre esa recta a
+      distancias ±d del neutro; a un dicrómata del tipo correspondiente
+      se le confunden. Un tricrómata normal las distingue.
+   4) Convertimos (x, y, Y) → XYZ → sRGB lineal (matriz D65) → sRGB con
+      gamma. Si algún canal sale fuera de [0,1] reducimos d y
+      reintentamos hasta que entre en gamut.
+   5) En cada punto variamos Y aleatoriamente ±20 %: así, si alguien
+      pudiera "leer" el número por diferencias de brillo residuales, el
+      ruido de luminancia las enmascara. Esto es lo que falta en los
+      JPGs comprimidos y lo que hace válida la lámina.
+   ========================================================================= */
 
-    // Expected answers for colorblind vision
-    const expectedColorblindAnswers = [
-      "12", "3", "5", "70", "35", "2", "5", "17", "21", "nada significativo",
-      "nada significativo", "nada significativo", "nada significativo", "nada significativo",
-      "nada significativo", "nada significativo", "nada significativo", "5", "2", "45", "73",
-      "6 o 2", "2 o 4", "5 o 3", "6 o 9", "línea morada o línea roja", "línea morada o línea roja",
-      "una línea", "una línea", "nada coherente", "nada coherente", "nada coherente o falsa línea",
-      "nada coherente o falsa línea", "línea rojo-verde y violeta", "línea azul-verde y violeta",
-      "línea azul-verde y violeta", "línea azul-verde y violeta", "línea"
-    ];
+const WHITE_XY = {x: 0.3127, y: 0.3290};
+const COPUNCTAL = {
+  protan: {x: 0.747, y: 0.253},
+  deutan: {x: 1.080, y: -0.800},
+  tritan: {x: 0.171, y: 0.000},
+};
 
-    // Suggestions for incorrect answers
-    const suggestions = [
-      "",
-      "Enfócate en los bordes superiores del número para distinguir el 8.",
-      "Observa el centro de la placa para identificar el 6.",
-      "Cuenta los dígitos en el área central para ver el 29.",
-      "Enfócate en la parte inferior para distinguir el 57.",
-      "Busca el contraste en la parte superior para ver el 5.",
-      "Revisa los bordes del número para identificar el 3.",
-      "Observa la placa completa para distinguir el 15.",
-      "Enfócate en los bordes para ver el 74.",
-      "Busca un solo dígito en el centro para el 2.",
-      "Observa el área central para encontrar el 6.",
-      "Cuenta los dígitos en la parte superior para el 97.",
-      "Enfócate en los bordes para ver el 45.",
-      "Busca un solo dígito en el centro para el 5.",
-      "Observa el área central para encontrar el 7.",
-      "Enfócate en los bordes para identificar el 16.",
-      "Revisa la parte superior para ver el 73.",
-      "Busca un número en el centro si no ves nada claro.",
-      "Observa el centro para encontrar el 2.",
-      "Enfócate en los bordes para ver el 45.",
-      "Revisa la placa completa para identificar el 73.",
-      "Observa los patrones en la parte central para el 26.",
-      "Enfócate en los bordes para distinguir el 42.",
-      "Busca el número en el área superior para el 35.",
-      "Revisa los bordes para identificar el 96.",
-      "Busca líneas rectas de colores en el centro.",
-      "Observa las líneas rectas en el área central.",
-      "Enfócate en el centro para ver una línea clara.",
-      "Busca una línea recta en el centro.",
-      "Observa una línea vertical u horizontal clara.",
-      "Enfócate en el centro para ver una línea.",
-      "Busca una línea de color claro en el centro.",
-      "Observa una línea recta en el área central.",
-      "Enfócate en dos líneas claras en la placa.",
-      "Busca dos líneas distintas en el centro.",
-      "Observa dos líneas de colores diferentes.",
-      "Enfócate en las líneas rectas en el centro.",
-      ""
-    ];
+function unitDir(from, to) {
+  const dx = to.x - from.x, dy = to.y - from.y;
+  const n = Math.hypot(dx, dy);
+  return {x: dx/n, y: dy/n};
+}
+const DIR = {
+  protan: unitDir(WHITE_XY, COPUNCTAL.protan),
+  deutan: unitDir(WHITE_XY, COPUNCTAL.deutan),
+  tritan: unitDir(WHITE_XY, COPUNCTAL.tritan),
+};
 
-    // Images without numbers (lines or colors)
-    const nonNumberImages = [18, 19, 20, 21, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38];
+// sRGB matrix (D65)
+const M = [
+  [ 3.2406, -1.5372, -0.4986],
+  [-0.9689,  1.8758,  0.0415],
+  [ 0.0557, -0.2040,  1.0570],
+];
+function xyYtoRGB(x, y, Y) {
+  if (y <= 0) return null;
+  const X = x*Y/y, Z = (1-x-y)*Y/y;
+  const rl = M[0][0]*X + M[0][1]*Y + M[0][2]*Z;
+  const gl = M[1][0]*X + M[1][1]*Y + M[1][2]*Z;
+  const bl = M[2][0]*X + M[2][1]*Y + M[2][2]*Z;
+  if ([rl,gl,bl].some(v => v < 0 || v > 1)) return null;
+  const enc = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055;
+  return [Math.round(enc(rl)*255), Math.round(enc(gl)*255), Math.round(enc(bl)*255)];
+}
 
-    let currentImageIndex = 0;
-    let userResponses = [];
-    let imageOrder = [];
-    let pdfDoc = null;
-    let pageNum = 1;
-    let zoomLevel = 1;
-    let imageScale = 1;
-    let currentCardIndex = 0;
-    let memorizedCards = new Set();
-    let cardOrder = [];
-    let isFront = true;
+// Pareja figura/fondo sobre la línea de confusión del tipo dado.
+// `d` = distancia en xy (cuánto se separan del neutro). Más chico = más difícil.
+function confusionPair(type, d, Yfig = 0.5, Ybg = 0.5) {
+  const dir = DIR[type];
+  for (let k = d; k > 0.005; k -= 0.005) {
+    const fig = {x: WHITE_XY.x + dir.x*k, y: WHITE_XY.y + dir.y*k};
+    const bg  = {x: WHITE_XY.x - dir.x*k, y: WHITE_XY.y - dir.y*k};
+    const rgbF = xyYtoRGB(fig.x, fig.y, Yfig);
+    const rgbB = xyYtoRGB(bg.x,  bg.y,  Ybg);
+    if (rgbF && rgbB) return {fig: rgbF, bg: rgbB, actualD: k};
+  }
+  return null;
+}
 
-    // Function to colorize color names
-    function colorizeText(text) {
-      const colorMap = {
-        'rojo': 'red',
-        'verde': 'green',
-        'azul': 'blue',
-        'morado': 'purple',
-        'morada': 'purple',
-        'anaranjada': 'orange',
-        'naranja': 'orange',
-        'amarillo': 'yellow',
-        'violeta': 'purple'
-      };
-      let coloredText = text;
-      for (const [color, cssColor] of Object.entries(colorMap)) {
-        const regex = new RegExp(`\\b${color}\\b`, 'gi');
-        coloredText = coloredText.replace(regex, `<span style="color: ${cssColor}">${color}</span>`);
-      }
-      return coloredText;
+// Variación aleatoria de luminancia por punto: mata la pista de brillo.
+function jitterY(base) { return base * (0.80 + Math.random()*0.40); }
+function colorWithJitter(xy, baseY) {
+  for (let tries = 0; tries < 6; tries++) {
+    const Y = jitterY(baseY);
+    const rgb = xyYtoRGB(xy.x, xy.y, Y);
+    if (rgb) return rgb;
+  }
+  return xyYtoRGB(xy.x, xy.y, baseY);
+}
+
+/* =========================================================================
+   RENDER DE LÁMINAS
+   ========================================================================= */
+function renderPlate(canvas, {type, digit, d}) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+
+  // Máscara: dibujamos el dígito en un canvas offscreen para saber qué puntos caen "dentro"
+  const mask = document.createElement('canvas');
+  mask.width = W; mask.height = H;
+  const mctx = mask.getContext('2d');
+  mctx.fillStyle = '#000'; mctx.fillRect(0, 0, W, H);
+  mctx.fillStyle = '#fff';
+  mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
+  mctx.font = 'bold 300px sans-serif';
+  mctx.fillText(String(digit), W/2, H/2 + 10);
+  const maskData = mctx.getImageData(0, 0, W, H).data;
+
+  const isFigure = (x, y) => {
+    const i = (Math.floor(y)*W + Math.floor(x)) * 4;
+    return maskData[i] > 128;
+  };
+
+  let figXY, bgXY, baseFigRGB, baseBgRGB;
+  if (type === 'control') {
+    figXY = null; bgXY = null;
+  } else {
+    // Usar confusionPair que ya reduce d hasta encontrar un par válido en sRGB
+    const pair = confusionPair(type, d);
+    const dir = DIR[type];
+    const kd = pair ? pair.actualD : d;
+    figXY = {x: WHITE_XY.x + dir.x*kd, y: WHITE_XY.y + dir.y*kd};
+    bgXY  = {x: WHITE_XY.x - dir.x*kd, y: WHITE_XY.y - dir.y*kd};
+    baseFigRGB = pair ? pair.fig : [128,128,128];
+    baseBgRGB  = pair ? pair.bg  : [128,128,128];
+  }
+
+  // Círculo recortado
+  ctx.save();
+  ctx.beginPath(); ctx.arc(W/2, H/2, W/2 - 2, 0, Math.PI*2); ctx.clip();
+
+  const R = W/2 - 2, cx = W/2, cy = H/2;
+  const dots = 2200;
+  let placed = 0, tries = 0;
+  const placedDots = [];
+  while (placed < dots && tries < dots*20) {
+    tries++;
+    const x = Math.random() * W, y = Math.random() * H;
+    if (Math.hypot(x - cx, y - cy) > R) continue;
+    const r = 4 + Math.random()*5;
+    // Evitar solapamientos excesivos (muestreo tipo Poisson simplificado)
+    let bad = false;
+    for (let i = Math.max(0, placedDots.length - 40); i < placedDots.length; i++) {
+      const p = placedDots[i];
+      if (Math.hypot(x - p.x, y - p.y) < (r + p.r) * 0.75) { bad = true; break; }
     }
-
-    // Initialize test
-    function initTest() {
-      imageOrder = Array.from({ length: 38 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
-      currentImageIndex = 0;
-      userResponses = [];
-      imageScale = 1;
-      updateTestImage();
+    if (bad) continue;
+    const fig = isFigure(x, y);
+    let rgb;
+    if (type === 'control') {
+      rgb = fig ? [40, 40, 40] : [210, 210, 210];
+    } else {
+      rgb = fig ? colorWithJitter(figXY, 0.50) : colorWithJitter(bgXY, 0.50);
+      if (!rgb) rgb = fig ? baseFigRGB : baseBgRGB;
     }
+    ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    placedDots.push({x, y, r});
+    placed++;
+  }
+  ctx.restore();
+}
 
-    // Update test image and UI based on image type
-    function updateTestImage() {
-      const imgNum = imageOrder[currentImageIndex];
-      document.getElementById('ishiharaImage').src = `imagenes/ishihara-image-${imgNum}.jpg`;
-      document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
-      document.getElementById('userAnswer').value = '';
-      document.getElementById('resultMessage').innerHTML = '';
-      document.getElementById('nextImage').classList.add('hidden');
-      document.getElementById('submitAnswer').classList.add('hidden');
-      document.getElementById('showResult').classList.add('hidden');
-      document.getElementById('inputContainer').classList.add('hidden');
-      document.getElementById('resultContainer').classList.add('hidden');
+/* =========================================================================
+   LISTA DE LÁMINAS
+   Niveles: 1 = fácil (d grande), 2 = medio, 3 = difícil (d chico)
+   ========================================================================= */
+const LEVELS = { 1: 0.085, 2: 0.045, 3: 0.025 };
+function buildPlateSet() {
+  const digits = () => Math.floor(10 + Math.random()*90); // dos cifras, aleatorio
+  const plates = [
+    { type:'control', level:0, digit: digits(), d: 0 }, // control: todos
+  ];
+  for (const type of ['protan','deutan','tritan']) {
+    for (const lvl of [1, 2, 3]) {
+      plates.push({ type, level: lvl, digit: digits(), d: LEVELS[lvl] });
+    }
+  }
+  // Orden aleatorio
+  for (let i = plates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [plates[i], plates[j]] = [plates[j], plates[i]];
+  }
+  return plates;
+}
 
-      if (nonNumberImages.includes(imgNum)) {
-        document.getElementById('resultContainer').classList.remove('hidden');
-        document.getElementById('showResult').classList.remove('hidden');
+/* =========================================================================
+   D-15 — anillo de 15 fichas en CIELAB a L=70, C=38
+   ========================================================================= */
+function labToRGB(L, a, b) {
+  // D65
+  const Xn = 0.95047, Yn = 1.0, Zn = 1.08883;
+  const fy = (L + 16) / 116, fx = fy + a/500, fz = fy - b/200;
+  const f = t => t*t*t > 0.008856 ? t*t*t : (t - 16/116) / 7.787;
+  const X = Xn * f(fx), Y = Yn * f(fy), Z = Zn * f(fz);
+  const rl = M[0][0]*X + M[0][1]*Y + M[0][2]*Z;
+  const gl = M[1][0]*X + M[1][1]*Y + M[1][2]*Z;
+  const bl = M[2][0]*X + M[2][1]*Y + M[2][2]*Z;
+  const enc = v => Math.max(0, Math.min(1, v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(Math.max(v,0), 1/2.4) - 0.055));
+  return [Math.round(enc(rl)*255), Math.round(enc(gl)*255), Math.round(enc(bl)*255)];
+}
+function d15Caps() {
+  const N = 16;              // 1 piloto + 15 móviles
+  const L = 70, C = 38;
+  const caps = [];
+  for (let i = 0; i < N; i++) {
+    const h = (i / N) * 2 * Math.PI;
+    const a = C * Math.cos(h), b = C * Math.sin(h);
+    const rgb = labToRGB(L, a, b);
+    caps.push({ id: i, hue: h, a, b, rgb });
+  }
+  return caps;
+}
+
+/* =========================================================================
+   ESTADO Y FLUJO
+   ========================================================================= */
+const state = {
+  plates: [],
+  plateIdx: 0,
+  answers: [],      // {plate, userAnswer, correct}
+  d15Order: [],     // ids colocados por el usuario (incluye piloto en pos 0)
+  d15Caps: [],
+};
+
+const el = id => document.getElementById(id);
+const sections = ['prepSection','plateSection','d15Section','resultSection','pdfSection'];
+const tabs = { prepSection:'prepTab', plateSection:'plateTab', d15Section:'d15Tab', resultSection:'resultTab', pdfSection:'pdfTab' };
+function show(sec) {
+  sections.forEach(s => el(s).classList.toggle('hidden', s !== sec));
+  Object.entries(tabs).forEach(([s, t]) => {
+    el(t).classList.toggle('bg-blue-600', s === sec);
+    el(t).classList.toggle('text-white',  s === sec);
+    el(t).classList.toggle('bg-gray-200', s !== sec);
+    el(t).classList.toggle('text-gray-800', s !== sec);
+  });
+}
+el('prepTab').onclick = () => show('prepSection');
+el('plateTab').onclick = () => !el('plateTab').disabled && show('plateSection');
+el('d15Tab').onclick = () => !el('d15Tab').disabled && show('d15Section');
+el('resultTab').onclick = () => !el('resultTab').disabled && show('resultSection');
+el('pdfTab').onclick = () => { show('pdfSection'); if (!pdfDoc) loadPDF(); };
+
+/* --- Preparación --- */
+el('prepForm').addEventListener('submit', e => {
+  e.preventDefault();
+  startPlates();
+});
+
+function startPlates() {
+  state.plates = buildPlateSet();
+  state.plateIdx = 0;
+  state.answers = [];
+  el('plateTab').disabled = false;
+  show('plateSection');
+  nextPlate();
+}
+
+function nextPlate() {
+  if (state.plateIdx >= state.plates.length) { startD15(); return; }
+  const p = state.plates[state.plateIdx];
+  el('plateProgress').textContent = `Lámina ${state.plateIdx + 1} de ${state.plates.length}`;
+  el('plateAnswer').value = '';
+  renderPlate(el('plateCanvas'), p);
+  el('plateAnswer').focus();
+}
+el('plateSubmit').onclick = () => recordPlate(el('plateAnswer').value.trim());
+el('plateSkip').onclick   = () => recordPlate('');
+el('plateAnswer').addEventListener('keypress', e => { if (e.key === 'Enter') el('plateSubmit').click(); });
+
+function recordPlate(answerRaw) {
+  const p = state.plates[state.plateIdx];
+  const expected = String(p.digit);
+  const given = answerRaw.replace(/\D/g, '');
+  const correct = given === expected;
+  state.answers.push({ plate: p, given: answerRaw, correct });
+  state.plateIdx++;
+  nextPlate();
+}
+
+/* --- D-15 --- */
+function startD15() {
+  state.d15Caps = d15Caps();
+  // piloto = cap 0; el resto va a la reserva, barajado
+  const rest = state.d15Caps.slice(1);
+  for (let i = rest.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [rest[i], rest[j]] = [rest[j], rest[i]];
+  }
+  state.d15Pool = rest.map(c => c.id);
+  state.d15OrderIds = [0]; // piloto fijo en posición 0
+  el('d15Tab').disabled = false;
+  show('d15Section');
+  renderD15();
+}
+
+function makeCapEl(cap, draggable) {
+  const d = document.createElement('div');
+  d.className = 'd15-cap' + (draggable ? '' : ' pilot');
+  d.style.background = `rgb(${cap.rgb[0]},${cap.rgb[1]},${cap.rgb[2]})`;
+  d.dataset.id = cap.id;
+  if (draggable) d.setAttribute('draggable', 'true');
+  d.setAttribute('role', 'listitem');
+  d.setAttribute('aria-label', draggable ? `Ficha ${cap.id}` : 'Ficha fija de partida');
+  if (!draggable) {
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl'; lbl.textContent = 'FIJA';
+    d.appendChild(lbl);
+  }
+  return d;
+}
+
+function renderD15() {
+  const order = el('d15Order'), pool = el('d15Pool');
+  order.innerHTML = ''; pool.innerHTML = '';
+  state.d15OrderIds.forEach((id, idx) => {
+    const cap = state.d15Caps[id];
+    const node = makeCapEl(cap, idx !== 0);
+    node.dataset.zone = 'order';
+    order.appendChild(node);
+  });
+  state.d15Pool.forEach(id => {
+    const cap = state.d15Caps[id];
+    const node = makeCapEl(cap, true);
+    node.dataset.zone = 'pool';
+    pool.appendChild(node);
+  });
+  bindDnD();
+}
+
+function bindDnD() {
+  let dragged = null;
+  document.querySelectorAll('.d15-cap[draggable="true"]').forEach(c => {
+    c.addEventListener('dragstart', e => {
+      dragged = c;
+      e.dataTransfer.setData('text/plain', c.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+  });
+  ['d15Order','d15Pool'].forEach(zone => {
+    const z = el(zone);
+    z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
+    z.addEventListener('dragleave', () => z.classList.remove('over'));
+    z.addEventListener('drop', e => {
+      e.preventDefault(); z.classList.remove('over');
+      if (!dragged) return;
+      const id = parseInt(dragged.dataset.id, 10);
+      // quitar de donde esté
+      state.d15Pool = state.d15Pool.filter(x => x !== id);
+      state.d15OrderIds = state.d15OrderIds.filter(x => x !== id);
+      if (zone === 'd15Order') {
+        // determinar posición basada en coord x del drop
+        const rect = z.getBoundingClientRect();
+        const caps = [...z.querySelectorAll('.d15-cap')];
+        let insertAt = state.d15OrderIds.length;
+        for (let i = 0; i < caps.length; i++) {
+          const r = caps[i].getBoundingClientRect();
+          if (e.clientX < r.left + r.width/2) { insertAt = i; break; }
+        }
+        if (insertAt < 1) insertAt = 1; // no desplazar el piloto
+        state.d15OrderIds.splice(insertAt, 0, id);
       } else {
-        document.getElementById('inputContainer').classList.remove('hidden');
-        document.getElementById('submitAnswer').classList.remove('hidden');
+        state.d15Pool.push(id);
       }
-
-      updateRemainingImages();
-    }
-
-    // Update remaining images counter
-    function updateRemainingImages() {
-      const remaining = 38 - currentImageIndex;
-      document.getElementById('remainingImages').textContent = `Faltan ${remaining} de 38 imágenes`;
-    }
-
-    // Handle image zoom
-    document.getElementById('zoomInImage').addEventListener('click', () => {
-      if (imageScale < 2.5) {
-        imageScale += 0.2;
-        document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
-      }
+      renderD15();
     });
-
-    document.getElementById('zoomOutImage').addEventListener('click', () => {
-      if (imageScale > 0.5) {
-        imageScale -= 0.2;
-        document.getElementById('ishiharaImage').style.transform = `scale(${imageScale})`;
-      }
-    });
-
-    // Handle answer submission
-    document.getElementById('submitAnswer').addEventListener('click', () => {
-      const userAnswer = document.getElementById('userAnswer').value.trim().toLowerCase();
-      userResponses.push(userAnswer);
-      const message = correctAnswers[imageOrder[currentImageIndex] - 1].replace(/\. /g, '.<br>');
-      document.getElementById('resultMessage').innerHTML = colorizeText(message);
-      document.getElementById('nextImage').classList.remove('hidden');
-      document.getElementById('submitAnswer').classList.add('hidden');
-    });
-
-    // Handle show result for non-number images
-    document.getElementById('showResult').addEventListener('click', () => {
-      userResponses.push('');
-      const message = correctAnswers[imageOrder[currentImageIndex] - 1].replace(/\. /g, '.<br>');
-      document.getElementById('resultMessage').innerHTML = colorizeText(message);
-      document.getElementById('nextImage').classList.remove('hidden');
-      document.getElementById('showResult').classList.add('hidden');
-    });
-
-    // Handle Enter key for submission
-    document.getElementById('userAnswer').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        document.getElementById('submitAnswer').click();
-      }
-    });
-
-    // Handle next image
-    document.getElementById('nextImage').addEventListener('click', () => {
-      currentImageIndex++;
-      if (currentImageIndex < 38) {
-        imageScale = 1;
-        updateTestImage();
+  });
+  // Fallback táctil mínimo: tap para mover entre zonas (si drag no funciona en móvil)
+  document.querySelectorAll('.d15-cap[draggable="true"]').forEach(c => {
+    c.addEventListener('dblclick', () => {
+      const id = parseInt(c.dataset.id, 10);
+      if (state.d15Pool.includes(id)) {
+        state.d15Pool = state.d15Pool.filter(x => x !== id);
+        state.d15OrderIds.push(id);
       } else {
-        showResults();
+        state.d15OrderIds = state.d15OrderIds.filter(x => x !== id);
+        state.d15Pool.push(id);
       }
+      renderD15();
     });
+  });
+}
 
-    // Show results
-    function showResults() {
-      document.getElementById('testContainer').classList.add('hidden');
-      document.getElementById('resultsSection').classList.remove('hidden');
-      const tbody = document.getElementById('resultsTable').querySelector('tbody');
-      tbody.innerHTML = '';
-      let errors = 0;
+el('d15Submit').onclick = () => {
+  if (state.d15Pool.length > 0) {
+    alert('Faltan fichas por colocar en la fila ordenada.');
+    return;
+  }
+  computeResult();
+  el('resultTab').disabled = false;
+  show('resultSection');
+};
 
-      imageOrder.forEach((imgNum, i) => {
-        const userAnswer = userResponses[i] || "";
-        const correctAnswer = expectedNormalAnswers[imgNum - 1];
-        const colorblindAnswer = expectedColorblindAnswers[imgNum - 1];
-        const isCorrect = nonNumberImages.includes(imgNum) ? true : (userAnswer.toLowerCase() === correctAnswer.toLowerCase() || (correctAnswer === '' && userAnswer === ''));
-        if (!isCorrect && correctAnswer !== '') errors++;
-        const suggestion = isCorrect ? '' : suggestions[imgNum - 1];
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td class="border border-gray-200 p-2 md:p-3"><img src="imagenes/ishihara-image-${imgNum}.jpg" class="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg"></td>
-          <td class="border border-gray-200 p-2 md:p-3">${userAnswer}</td>
-          <td class="border border-gray-200 p-2 md:p-3">${colorizeText(correctAnswers[imgNum - 1].replace(/\. /g, '.<br>'))}</td>
-          <td class="border border-gray-200 p-2 md:p-3">${colorizeText(colorblindAnswer)}</td>
-          <td class="border border-gray-200 p-2 md:p-3 ${isCorrect ? 'text-green-600' : 'text-red-600'}">${isCorrect ? 'Correcto' : 'Incorrecto'}</td>
-          <td class="border border-gray-200 p-2 md:p-3">${suggestion}</td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      // Diagnosis based on errors
-      let diagnosisText = '';
-      if (errors <= 4) {
-        diagnosisText = 'Basado en tus resultados, parece que tienes una visión normal o una deficiencia muy leve.';
-      } else if (errors <= 8) {
-        diagnosisText = 'Basado en tus resultados, podrías tener una deficiencia rojo-verde leve a moderada.';
-      } else {
-        diagnosisText = 'Basado en tus resultados, es probable que tengas una deficiencia rojo-verde moderada a severa.';
-      }
-      document.getElementById('diagnosis').textContent = diagnosisText;
+/* =========================================================================
+   DIAGNÓSTICO ORIENTATIVO
+   ========================================================================= */
+function computeResult() {
+  // Láminas: aciertos por tipo y por nivel
+  const byType = { protan:{1:[], 2:[], 3:[]}, deutan:{1:[], 2:[], 3:[]}, tritan:{1:[], 2:[], 3:[]} };
+  let controlOK = true;
+  for (const a of state.answers) {
+    if (a.plate.type === 'control') { controlOK = a.correct; continue; }
+    byType[a.plate.type][a.plate.level].push(a.correct);
+  }
+  const score = (type) => {
+    const s = {};
+    for (const lvl of [1,2,3]) {
+      const arr = byType[type][lvl];
+      s[lvl] = arr.length ? arr.filter(Boolean).length / arr.length : 0;
     }
+    // "pasa" el nivel si acierta >=50% (sólo hay 1 por nivel aquí, así que 0 o 1)
+    const hardestPassed = [3,2,1].find(l => s[l] >= 1) || 0;
+    return { s, hardestPassed };
+  };
+  const r = { protan: score('protan'), deutan: score('deutan'), tritan: score('tritan') };
 
-    // Restart test
-    document.getElementById('restartTest').addEventListener('click', initTest);
+  // Peor eje = el que menos niveles difíciles pasó
+  const types = ['protan','deutan','tritan'];
+  types.sort((x,y) => r[x].hardestPassed - r[y].hardestPassed);
+  const worst = types[0];
+  const bestLevelOverall = Math.max(r.protan.hardestPassed, r.deutan.hardestPassed, r.tritan.hardestPassed);
 
-    // Initialize training
-    function initTraining() {
-      cardOrder = Array.from({ length: 38 }, (_, i) => i + 1);
-      currentCardIndex = 0;
-      isFront = true;
-      memorizedCards.clear();
-      updateFlashcard();
-      updateProgress();
+  // Severidad por tipo peor:
+  // pasó L3 → normal, pasó sólo L2 → leve, sólo L1 → moderado, nada → fuerte
+  const severityMap = {3:'normal', 2:'leve', 1:'moderada', 0:'fuerte'};
+  const worstSev = severityMap[r[worst].hardestPassed];
+  const normalOnAll = types.every(t => r[t].hardestPassed === 3);
+
+  // D-15: analizar eje
+  const d15 = analyzeD15();
+
+  // Veredicto
+  let verdictText = '';
+  let confidence = 'alta';
+  if (!controlOK) { confidence = 'baja'; }
+  // Si D-15 contradice (p. ej. láminas dicen protan pero D-15 marca tritan), bajar confianza
+  if (!normalOnAll && d15.axisType && d15.axisType !== worst && d15.majorErrors >= 2) {
+    confidence = 'baja';
+  }
+
+  if (normalOnAll && d15.majorErrors <= 1) {
+    verdictText = `<strong class="state-ok">Visión del color dentro de lo normal.</strong><br>
+      Pasaste los tres niveles de dificultad en los tres ejes (protan/deutan/tritan) y el D-15 no muestra errores significativos.`;
+  } else {
+    const typeLabel = { protan:'protan (rojo)', deutan:'deutan (verde)', tritan:'tritan (azul)' }[worst];
+    verdictText = `<strong class="state-fail">Posible deficiencia en el eje ${typeLabel}, severidad ${worstSev}.</strong><br>
+      ${d15.axisType ? `El ordenamiento D-15 es compatible con un eje <strong>${d15.axisType}</strong> (${d15.majorErrors} cruces).` : 'El D-15 no muestra un eje claro.'}
+      <br>Confianza del resultado: <strong>${confidence}</strong>${!controlOK ? ' (fallaste la lámina de control: el resultado puede no ser fiable; revisa pantalla y vuelve a intentar).' : ''}.`;
+  }
+  el('verdict').innerHTML = verdictText;
+
+  // Breakdown table
+  let html = '<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100"><th class="p-2 border">Eje</th><th class="p-2 border">Nivel 1 (fácil)</th><th class="p-2 border">Nivel 2 (medio)</th><th class="p-2 border">Nivel 3 (difícil)</th></tr></thead><tbody>';
+  const mark = ok => ok ? '<span class="state-ok">acierto</span>' : '<span class="state-fail">falla</span>';
+  for (const t of ['protan','deutan','tritan']) {
+    html += `<tr><td class="p-2 border font-semibold">${t}</td>`;
+    for (const lvl of [1,2,3]) {
+      const arr = byType[t][lvl];
+      html += `<td class="p-2 border">${arr.length ? mark(arr[0]) : '—'}</td>`;
     }
+    html += '</tr>';
+  }
+  html += `</tbody></table>
+    <p class="mt-2">Control: ${controlOK ? '<span class="state-ok">superado</span>' : '<span class="state-fail">FALLADO — resultado poco fiable</span>'}.</p>
+    <p>D-15: ${d15.majorErrors} cruces mayores, ángulo medio ${Math.round(d15.axisAngle*180/Math.PI)}° (eje ${d15.axisType || 'no concluyente'}).</p>`;
+  el('breakdown').innerHTML = html;
 
-    // Update flashcard
-    function updateFlashcard() {
-      const imgNum = cardOrder[currentCardIndex];
-      const flashcardImage = document.getElementById('flashcardImage');
-      const flashcardAnswer = document.getElementById('flashcardAnswer');
-      flashcardImage.src = `imagenes/ishihara-image-${imgNum}.jpg`;
-      flashcardAnswer.innerHTML = colorizeText(correctAnswers[imgNum - 1].replace(/\. /g, '.<br>'));
-      if (isFront) {
-        flashcardImage.classList.remove('hidden');
-        flashcardAnswer.classList.add('hidden');
-      } else {
-        flashcardImage.classList.add('hidden');
-        flashcardAnswer.classList.remove('hidden');
-      }
-      document.getElementById('markMemorized').textContent = memorizedCards.has(imgNum) ? 'Desmarcar Memorizada' : 'Marcar como Memorizada';
+  drawD15Diagram(d15);
+
+  const reportData = {byType, controlOK, worst, worstSev, normalOnAll, d15, confidence};
+  el('exportResult').onclick = () => {
+    const text = buildReport(reportData);
+    navigator.clipboard.writeText(text).then(() => alert('Resumen copiado al portapapeles.'));
+  };
+  el('exportPDF').onclick = () => exportPDF(reportData);
+}
+
+function exportPDF({byType, controlOK, worst, worstSev, normalOnAll, d15, confidence}) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const M = 18;
+  let y = M;
+  const line = (txt, size = 11, bold = false) => {
+    doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    doc.setFontSize(size);
+    const wrapped = doc.splitTextToSize(txt, 210 - M*2);
+    doc.text(wrapped, M, y);
+    y += wrapped.length * (size * 0.42) + 1.5;
+  };
+  const space = (n = 3) => { y += n; };
+
+  line('Informe orientativo de visión del color', 16, true);
+  line(new Date().toLocaleString(), 9);
+  space(2);
+
+  line('Resultado', 13, true);
+  const typeLabel = { protan: 'protan (eje rojo-verde, afecta receptor L)', deutan: 'deutan (eje rojo-verde, afecta receptor M)', tritan: 'tritan (eje azul-amarillo, afecta receptor S)' };
+  if (normalOnAll && d15.majorErrors <= 1) {
+    line('Visión del color dentro de lo normal.', 11, true);
+    line('Se superaron los tres niveles de dificultad en los tres ejes de confusión (protan, deutan, tritan) y el ordenamiento D-15 no muestra errores significativos.');
+  } else {
+    line(`Posible deficiencia en el eje ${typeLabel[worst]}.`, 11, true);
+    line(`Severidad estimada: ${worstSev}.`);
+    if (d15.axisType) line(`El ordenamiento D-15 es compatible con un eje ${d15.axisType} (${d15.majorErrors} cruces mayores).`);
+  }
+  line(`Confianza del resultado: ${confidence}.${!controlOK ? ' La lámina de control falló: el resultado puede no ser fiable (revisar pantalla, brillo, filtros de color).' : ''}`);
+  space();
+
+  line('Metodología', 13, true);
+  line('Láminas pseudoisocromáticas generadas por software. Figura y fondo elegidos sobre las líneas de confusión protan, deutan y tritan en el espacio CIE xy (puntos copunctales clásicos; convertidos a sRGB D65). Cada punto de la lámina varía su luminancia ±20 % de forma aleatoria para que la figura no pueda discriminarse por brillo. Niveles 1/2/3 corresponden a distancias decrecientes a lo largo de la línea de confusión (0.085 / 0.045 / 0.025 en xy). Una lámina de control acromática verifica legibilidad y preparación de la pantalla.');
+  line('Ordenamiento D-15: 16 fichas en CIELAB a L=70, C=38, equiespaciadas en hue. Una ficha fija como punto de partida; el resto se ordena. Se calcula el ángulo medio de los vectores de error (cruces mayores) y se compara con los ejes clínicos aproximados.');
+  space();
+
+  line('Resultados por lámina', 13, true);
+  for (const t of ['protan', 'deutan', 'tritan']) {
+    const row = [1,2,3].map(l => {
+      const arr = byType[t][l];
+      return `L${l}: ${arr.length ? (arr[0] ? 'acierto' : 'falla') : '—'}`;
+    }).join('   ');
+    line(`${t.padEnd(8)}  ${row}`, 10);
+  }
+  line(`Control:  ${controlOK ? 'superado' : 'FALLADO'}`, 10);
+  space();
+
+  line('Ordenamiento D-15', 13, true);
+  line(`Cruces mayores: ${d15.majorErrors}. Ángulo medio del eje de error: ${Math.round(d15.axisAngle*180/Math.PI)}°. Eje: ${d15.axisType || 'no concluyente'}.`, 10);
+  space(2);
+
+  // Diagrama del D-15
+  try {
+    const img = el('d15Diagram').toDataURL('image/png');
+    const w = 80, h = 80;
+    if (y + h > 280) { doc.addPage(); y = M; }
+    doc.addImage(img, 'PNG', (210 - w)/2, y, w, h);
+    y += h + 4;
+    line('Diagrama D-15: círculo con el orden ideal; línea azul = orden del usuario; línea negra discontinua = eje de confusión estimado.', 9);
+  } catch {}
+
+  space();
+  line('Condiciones de la prueba', 13, true);
+  line('Realizada en pantalla no calibrada, con las verificaciones de preparación (brillo, modo nocturno desactivado, sin filtro de luz azul, sin ajuste automático de color, sin filtros de accesibilidad del sistema) confirmadas por el paciente antes de empezar.');
+  space();
+
+  line('Nota clínica', 13, true);
+  line('Este informe es orientativo y no reemplaza un examen profesional. Para un diagnóstico formal se recomienda consulta con oftalmólogo u optómetra con pruebas estándar en condiciones controladas (Ishihara impreso con iluminación C/D65, Farnsworth D-15 o 100-Hue, anomaloscopio de Nagel).');
+
+  doc.save(`informe-vision-color-${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+function analyzeD15() {
+  // Para cada par consecutivo en el orden del usuario, calcula el ángulo del vector a*b*.
+  // "Cruce mayor" = salto de hue mayor a 60° (más de 2 posiciones del ideal).
+  const caps = state.d15Caps;
+  const order = state.d15OrderIds;
+  const vectors = [];
+  let majorErrors = 0;
+  for (let i = 0; i < order.length - 1; i++) {
+    const a = caps[order[i]], b = caps[order[i+1]];
+    const da = b.a - a.a, db = b.b - a.b;
+    const stepDist = Math.hypot(da, db);
+    const idealDist = 2 * 38 * Math.sin(Math.PI/16); // paso ideal en LAB
+    if (stepDist > idealDist * 2.2) {
+      majorErrors++;
+      vectors.push({a: da, b: db});
     }
-
-    // Update progress
-    function updateProgress() {
-      const progress = memorizedCards.size;
-      const percentage = Math.round((progress / 38) * 100);
-      document.getElementById('progressText').textContent = `Progreso: ${progress}/38 placas memorizadas (${percentage}%)`;
-    }
-
-    // Flashcard controls
-    document.getElementById('prevCard').addEventListener('click', () => {
-      if (currentCardIndex > 0) {
-        currentCardIndex--;
-        isFront = true;
-        updateFlashcard();
-      }
+  }
+  // Ángulo medio de los cruces
+  let axisAngle = 0;
+  if (vectors.length) {
+    let sx = 0, sy = 0;
+    vectors.forEach(v => {
+      let ang = Math.atan2(v.b, v.a);
+      // doble ángulo para que vectores opuestos se sumen (ejes, no direcciones)
+      sx += Math.cos(2*ang); sy += Math.sin(2*ang);
     });
+    axisAngle = Math.atan2(sy, sx) / 2;
+  }
+  // Mapeo orientativo del eje (ángulo en LAB a tipo clínico):
+  // protan ~ -5°  (eje rojo-verde-azul, ligeramente hacia azul)
+  // deutan ~ +10°
+  // tritan ~ +75° (eje azul-amarillo)
+  let axisType = null;
+  if (majorErrors >= 2) {
+    const degs = (axisAngle*180/Math.PI + 180) % 180; // [0,180)
+    if (degs < 40 || degs > 160) axisType = 'protan/deutan';
+    else if (degs > 50 && degs < 110) axisType = 'tritan';
+    else axisType = 'mixto';
+  }
+  return { majorErrors, axisAngle, axisType };
+}
 
-    document.getElementById('nextCard').addEventListener('click', () => {
-      if (currentCardIndex < 37) {
-        currentCardIndex++;
-        isFront = true;
-        updateFlashcard();
-      }
+function drawD15Diagram(d15) {
+  const c = el('d15Diagram'), ctx = c.getContext('2d');
+  const W = c.width, H = c.height, cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 30;
+  ctx.clearRect(0, 0, W, H);
+  const caps = state.d15Caps;
+  // Posiciones: cada cap en su hue ideal
+  const pos = caps.map(cap => ({
+    x: cx + R*Math.cos(cap.hue - Math.PI/2),
+    y: cy + R*Math.sin(cap.hue - Math.PI/2),
+  }));
+  // Eje aproximado
+  if (d15.majorErrors >= 2) {
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx + R*Math.cos(d15.axisAngle), cy + R*Math.sin(d15.axisAngle));
+    ctx.lineTo(cx - R*Math.cos(d15.axisAngle), cy - R*Math.sin(d15.axisAngle));
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // Trazado del orden del usuario
+  ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  state.d15OrderIds.forEach((id, i) => {
+    const p = pos[id];
+    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+  });
+  ctx.stroke();
+  // Fichas
+  caps.forEach((cap, i) => {
+    const p = pos[i];
+    ctx.fillStyle = `rgb(${cap.rgb[0]},${cap.rgb[1]},${cap.rgb[2]})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 12, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = i === 0 ? 3 : 1;
+    ctx.stroke();
+    ctx.fillStyle = '#000'; ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(i === 0 ? 'P' : String(i), p.x, p.y - 16);
+  });
+}
+
+function buildReport({byType, controlOK, worst, worstSev, normalOnAll, d15, confidence}) {
+  const lines = [];
+  lines.push('Resumen de prueba orientativa de visión del color');
+  lines.push(new Date().toLocaleString());
+  lines.push('');
+  lines.push('Láminas pseudoisocromáticas (figura/fondo sobre líneas de confusión en CIE xy, con jitter de luminancia):');
+  for (const t of ['protan','deutan','tritan']) {
+    const row = [1,2,3].map(l => {
+      const arr = byType[t][l];
+      return `L${l}: ${arr.length ? (arr[0] ? 'acierto' : 'falla') : '—'}`;
+    }).join(' | ');
+    lines.push(`  ${t.padEnd(7)}: ${row}`);
+  }
+  lines.push(`Control: ${controlOK ? 'superado' : 'FALLADO'}`);
+  lines.push('');
+  lines.push(`D-15: ${d15.majorErrors} cruces mayores, ángulo medio del eje de error ${Math.round(d15.axisAngle*180/Math.PI)}°, eje: ${d15.axisType || 'no concluyente'}`);
+  lines.push('');
+  if (normalOnAll && d15.majorErrors <= 1) {
+    lines.push('Conclusión: visión del color dentro de lo normal.');
+  } else {
+    lines.push(`Conclusión orientativa: posible deficiencia en el eje ${worst}, severidad ${worstSev}.`);
+  }
+  lines.push(`Confianza: ${confidence}.`);
+  lines.push('');
+  lines.push('Esto es un resultado orientativo, generado por software en una pantalla no calibrada.');
+  lines.push('No reemplaza un diagnóstico profesional.');
+  return lines.join('\n');
+}
+
+/* --- Reiniciar --- */
+el('restart').onclick = () => {
+  state.plates = []; state.plateIdx = 0; state.answers = [];
+  state.d15Pool = []; state.d15OrderIds = [];
+  el('plateTab').disabled = true; el('d15Tab').disabled = true; el('resultTab').disabled = true;
+  document.querySelectorAll('#prepForm input[type="checkbox"]').forEach(c => c.checked = false);
+  show('prepSection');
+};
+
+/* --- PDF (mantiene lo que ya funcionaba) --- */
+let pdfDoc = null, pageNum = 1;
+async function loadPDF() {
+  try {
+    const lib = window['pdfjsLib'];
+    lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+    pdfDoc = await lib.getDocument('documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf').promise;
+    el('pdfError').classList.add('hidden');
+    renderPdfPage(pageNum);
+  } catch { el('pdfError').classList.remove('hidden'); }
+}
+function renderPdfPage(n) {
+  if (!pdfDoc) return;
+  pdfDoc.getPage(n).then(page => {
+    const canvas = el('pdfCanvas'), ctx = canvas.getContext('2d');
+    const viewport = page.getViewport({ scale: 1.3 });
+    canvas.height = viewport.height; canvas.width = viewport.width;
+    page.render({ canvasContext: ctx, viewport }).promise.then(() => {
+      el('pageInfo').textContent = `Página ${n} de ${pdfDoc.numPages}`;
     });
+  });
+}
+el('prevPage').onclick = () => { if (pageNum > 1) { pageNum--; renderPdfPage(pageNum); } };
+el('nextPage').onclick = () => { if (pdfDoc && pageNum < pdfDoc.numPages) { pageNum++; renderPdfPage(pageNum); } };
 
-    document.getElementById('flipCard').addEventListener('click', () => {
-      isFront = !isFront;
-      updateFlashcard();
-    });
+/* --- Autocheck mínimo al cargar (ponytail: sanity check de la ciencia) --- */
+(function selfTest() {
+  // La pareja de confusión protan a d=0.085 debe estar en gamut y el fondo tener
+  // más verde que la figura (sanity para línea protan).
+  const p = confusionPair('protan', 0.085);
+  console.assert(p && p.fig && p.bg, 'confusionPair protan debe devolver RGBs');
+  console.assert(p.bg[1] > p.fig[1], 'En línea protan, el fondo debe tener más verde');
+  const t = confusionPair('tritan', 0.085);
+  console.assert(t && t.fig && t.bg, 'confusionPair tritan debe devolver RGBs');
+})();
 
-    document.getElementById('markMemorized').addEventListener('click', () => {
-      const imgNum = cardOrder[currentCardIndex];
-      if (memorizedCards.has(imgNum)) {
-        memorizedCards.delete(imgNum);
-      } else {
-        memorizedCards.add(imgNum);
-      }
-      updateProgress();
-      updateFlashcard();
-    });
-
-    // Download guide
-    document.getElementById('downloadGuide').addEventListener('click', () => {
-      window.location.href = 'documents/ishihara_guide.tex';
-    });
-
-    // PDF Viewer
-    async function loadPDF() {
-      try {
-        const pdfjsLib = window['pdfjsLib'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
-        pdfDoc = await pdfjsLib.getDocument('documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf').promise;
-        document.getElementById('pdfError').classList.add('hidden');
-        renderPage(pageNum);
-      } catch (error) {
-        console.error('Error loading PDF:', error);
-        document.getElementById('pdfError').classList.remove('hidden');
-      }
-    }
-
-    function renderPage(num) {
-      if (!pdfDoc) return;
-      pdfDoc.getPage(num).then(page => {
-        const canvas = document.getElementById('pdfCanvas');
-        const ctx = canvas.getContext('2d');
-        const viewport = page.getViewport({ scale: zoomLevel });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: viewport
-        };
-
-        page.render(renderContext).promise.then(() => {
-          document.getElementById('pageInfo').textContent = `Página ${num} de ${pdfDoc.numPages}`;
-        }).catch(error => {
-          console.error('Error rendering PDF page:', error);
-          document.getElementById('pdfError').classList.remove('hidden');
-        });
-      }).catch(error => {
-        console.error('Error getting PDF page:', error);
-        document.getElementById('pdfError').classList.remove('hidden');
-      });
-    }
-
-    // PDF controls
- document.getElementById('prevPage').addEventListener('click', () => {
-      if (pageNum > 1) {
-        pageNum--;
-        renderPage(pageNum);
-      }
-    });
-
-    document.getElementById('nextPage').addEventListener('click', () => {
-      if (pdfDoc && pageNum < pdfDoc.numPages) {
-        pageNum++;
-        renderPage(pageNum);
-      }
-    });
-
-    // Full-screen handling
-    const pdfSection = document.getElementById('pdfSection');
-    const fullScreenBtn = document.getElementById('fullScreen');
-
-    fullScreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        pdfSection.requestFullscreen().then(() => {
-          fullScreenBtn.textContent = 'Salir Pantalla Completa';
-          fullScreenBtn.classList.add('bg-blue-600', 'text-white');
-          fullScreenBtn.classList.remove('bg-blue-500');
-        }).catch(err => console.error('Error entering full-screen:', err));
-      } else {
-        document.exitFullscreen().then(() => {
-          resetFullScreenUI();
-        }).catch(err => console.error('Error exiting full-screen:', err));
-      }
-    });
-
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement) {
-        resetFullScreenUI();
-      }
-    });
-
-    function resetFullScreenUI() {
-      fullScreenBtn.textContent = 'Pantalla Completa';
-      fullScreenBtn.classList.remove('bg-blue-600', 'text-white');
-      fullScreenBtn.classList.add('bg-blue-500');
-      renderPage(pageNum);
-    }
-
-    // Tab navigation
-    function showSection(sectionId) {
-      document.getElementById('testSection').classList.add('hidden');
-      document.getElementById('trainingSection').classList.add('hidden');
-      document.getElementById('pdfSection').classList.add('hidden');
-      document.getElementById('tipsSection').classList.add('hidden');
-      document.getElementById(sectionId).classList.remove('hidden');
-
-      document.getElementById('testTab').classList.remove('bg-blue-600', 'text-white');
-      document.getElementById('trainingTab').classList.remove('bg-blue-600', 'text-white');
-      document.getElementById('pdfTab').classList.remove('bg-blue-600', 'text-white');
-      document.getElementById('tipsTab').classList.remove('bg-blue-600', 'text-white');
-      document.getElementById('testTab').classList.add('bg-gray-200', 'text-gray-800');
-      document.getElementById('trainingTab').classList.add('bg-gray-200', 'text-gray-800');
-      document.getElementById('pdfTab').classList.add('bg-gray-200', 'text-gray-800');
-      document.getElementById('tipsTab').classList.add('bg-gray-200', 'text-gray-800');
-
-      if (sectionId === 'testSection') {
-        document.getElementById('testTab').classList.add('bg-blue-600', 'text-white');
-        document.getElementById('testTab').classList.remove('bg-gray-200', 'text-gray-800');
-      } else if (sectionId === 'trainingSection') {
-        document.getElementById('trainingTab').classList.add('bg-blue-600', 'text-white');
-        document.getElementById('trainingTab').classList.remove('bg-gray-200', 'text-gray-800');
-      } else if (sectionId === 'pdfSection') {
-        document.getElementById('pdfTab').classList.add('bg-blue-600', 'text-white');
-        document.getElementById('pdfTab').classList.remove('bg-gray-200', 'text-gray-800');
-      } else if (sectionId === 'tipsSection') {
-        document.getElementById('tipsTab').classList.add('bg-blue-600', 'text-white');
-        document.getElementById('tipsTab').classList.remove('bg-gray-200', 'text-gray-800');
-      }
-    }
-
-    document.getElementById('testTab').addEventListener('click', () => showSection('testSection'));
-    document.getElementById('trainingTab').addEventListener('click', () => {
-      showSection('trainingSection');
-      initTraining();
-    });
-    document.getElementById('pdfTab').addEventListener('click', () => {
-      showSection('pdfSection');
-      if (!pdfDoc) loadPDF();
-    });
-    document.getElementById('tipsTab').addEventListener('click', () => showSection('tipsSection'));
-
-    // Initialize
-    initTest();
-    showSection('testSection');
-  </script>
+// arranque
+show('prepSection');
+</script>
 </body>
-
 </html>
