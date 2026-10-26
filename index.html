@@ -57,6 +57,13 @@
           <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>No uso <strong>filtros de color de accesibilidad</strong> ni modo de alto contraste, y no llevo gafas o lentes con filtro de color.</span></label>
           <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Luz ambiente normal, sin reflejos directos sobre la pantalla.</span></label>
           <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Responderé lo que vea sin adivinar; si no veo número, pulsaré <strong>"No veo ningún número"</strong>.</span></label>
+          <label class="block pt-2"><span class="font-semibold">Ojo evaluado:</span>
+            <select id="eye" class="border border-gray-600 rounded p-2 mt-1 w-full md:w-auto">
+              <option value="ambos ojos">Ambos ojos</option>
+              <option value="ojo derecho (izquierdo tapado)">Sólo ojo derecho (tapo el izquierdo con la palma, sin apretar)</option>
+              <option value="ojo izquierdo (derecho tapado)">Sólo ojo izquierdo (tapo el derecho con la palma, sin apretar)</option>
+            </select></label>
+          <p class="text-xs text-gray-700">En consulta se evalúa cada ojo por separado: la deficiencia congénita es igual en los dos, y una diferencia entre ojos sugiere una causa adquirida. Recomendado: hacer la prueba una vez con cada ojo.</p>
           <button id="startBtn" type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg w-full md:w-auto">Confirmo y empiezo ▶</button>
         </form>
       </div>
@@ -108,6 +115,7 @@
           <button id="exportPDF" class="bg-blue-700 text-white px-5 py-3 rounded-lg">⤓ Descargar informe PDF</button>
           <button id="exportResult" class="bg-white text-gray-900 border-2 border-gray-700 px-4 py-3 rounded-lg">⧉ Copiar resumen</button>
         </div>
+        <div id="explain" class="text-sm md:text-base mb-6"></div>
         <h3 class="font-bold mb-2">Datos que lo respaldan</h3>
         <div id="breakdown" class="text-sm md:text-base overflow-x-auto"></div>
         <h3 class="font-bold mt-6 mb-2">Diagrama del ordenamiento</h3>
@@ -333,6 +341,7 @@ for (const [s, t] of Object.entries(TABS)) el(t).onclick = () => { show(s); if (
 
 el('prepForm').addEventListener('submit', e => {
   e.preventDefault();
+  state.eye = el('eye').value;
   state.plates = buildPlateSet();
   state.plateIdx = 0;
   state.answers = [];
@@ -561,7 +570,7 @@ function diagnose(p, d) {
 function buildResult() {
   const plates = analyzePlates(state.answers);
   const d15 = analyzeD15(state.d15Order, state.d15Caps);
-  return { date: new Date(), plates, d15, dx: diagnose(plates, d15), answers: state.answers, order: [...state.d15Order], caps: state.d15Caps };
+  return { date: new Date(), eye: state.eye, plates, d15, dx: diagnose(plates, d15), answers: state.answers, order: [...state.d15Order], caps: state.d15Caps };
 }
 
 /* =========================================================================
@@ -586,6 +595,9 @@ function renderResult(R) {
     (v.body ? `<p class="mt-1">${v.body}</p>` : '') +
     `<p class="mt-2"><strong>Confiabilidad: ${dx.confidence}.</strong></p>` +
     (dx.reasons.length ? `<ul class="list-disc pl-6 text-sm mt-1">${dx.reasons.map(r => `<li>${r}</li>`).join('')}</ul>` : '');
+
+  el('explain').innerHTML = [...explainBlocks(R), ['h', 'Referencias'], ...REFERENCES.map((r, i) => ['small', `[${i + 1}] ${r}`])]
+    .map(([k, t]) => k === 'h' ? `<h3 class="font-bold text-lg mt-5 mb-1">${t}</h3>` : `<p class="mt-1 ${k === 'small' ? 'text-xs text-gray-700' : ''}">${t}</p>`).join('');
 
   const th = 'class="p-2 border border-gray-400 text-left"', td = 'class="p-2 border border-gray-400"';
   let h = `<table class="w-full border-collapse mb-2"><thead><tr class="bg-gray-100">
@@ -644,16 +656,68 @@ function drawD15Diagram({ d15, order, caps }) {
    INFORME (PDF y texto comparten el mismo contenido)
    Sólo caracteres WinAnsi: las fuentes estándar de jsPDF no tienen Δ, ✓, →.
    ========================================================================= */
+/* Explicación clínica en lenguaje claro. Las cifras citadas vienen de las referencias de REFERENCES. */
+const TYPE_EXPLAIN = {
+  protan: 'Tipo protan: los conos L, los más sensibles a la luz roja, faltan (protanopía) o tienen su sensibilidad desplazada (protanomalía). Se confunden entre sí rojos, naranjas, amarillos y verdes, y los rojos se perciben más oscuros de lo normal: por ejemplo, una luz roja puede parecer apagada o un texto rojo sobre fondo negro puede costar leerse.',
+  deutan: 'Tipo deutan: los conos M, los más sensibles a la luz verde, faltan (deuteranopía) o tienen su sensibilidad desplazada (deuteranomalía). Se confunden entre sí verdes, amarillos, naranjas y rojos, y también algunos morados con azules o grises. A diferencia del tipo protan, el brillo de los rojos se percibe casi normal. Es la forma de daltonismo más frecuente.',
+  tritan: 'Tipo tritan: afecta a los conos S, sensibles a la luz azul. Se confunden azules con verdes y amarillos con violetas o grises. La forma congénita es muy rara, así que un resultado tritan obliga a descartar una causa adquirida (retina, nervio óptico, cristalino o medicamentos). También puede deberse a un filtro de luz azul que siga activo en la pantalla.',
+  'rojo-verde': 'Tipo rojo-verde: afecta a los conos L (protan) o a los M (deutan). Las láminas y el ordenamiento no bastaron para decidir cuál; esa distinción la hace con precisión el anomaloscopio. En ambos casos se confunden rojos, naranjas, amarillos y verdes.',
+  'no específico': 'Se fallaron láminas de los ejes rojo-verde y azul-amarillo a la vez. Este patrón no es típico de una deficiencia congénita: puede deberse a la pantalla o a la iluminación, o a una causa adquirida, y requiere un examen ocular completo.',
+};
+const SEV_EXPLAIN = {
+  leve: `Severidad leve: sólo se fallaron las láminas con la menor diferencia de color (dE ${LEVEL_DE[3]}). En la vida diaria suele notarse poco; las dificultades aparecen con colores apagados, con poca luz o en objetos pequeños.`,
+  moderada: `Severidad moderada: se fallaron las láminas de diferencia media (dE ${LEVEL_DE[2]}), pero se leyeron las de diferencia grande (dE ${LEVEL_DE[1]}). Las confusiones son habituales con tonos de saturación media: ropa, mapas, gráficos, cables o frutas maduras frente a verdes.`,
+  fuerte: `Severidad fuerte: se fallaron incluso las láminas de mayor diferencia de color (dE ${LEVEL_DE[1]}). Es compatible con la ausencia funcional de un tipo de cono (dicromacia) o con una anomalía severa. Las confusiones son frecuentes incluso con colores vivos.`,
+};
+const REFERENCES = [
+  'Evans BEW, Rodriguez-Carmona M, Llapashtica E, Barbur JL. Color screening outcomes on uncalibrated "home" displays. J Opt Soc Am A. 2025;42(5):B289-B295. doi:10.1364/JOSAA.544986',
+  'Gómez-Robledo L, Valero EM, Huertas R, Martínez-Domingo MA, Hernández-Andrés J. Do EnChroma glasses improve color vision for colorblind subjects? Opt Express. 2018;26(22):28693-28703.',
+  'Vingrys AJ, King-Smith PE. A quantitative scoring technique for panel tests of color vision. Invest Ophthalmol Vis Sci. 1988;29(1):50-63.',
+  'Smith VC, Pokorny J. Spectral sensitivity of the foveal cone photopigments between 400 and 500 nm. Vision Res. 1975;15(2):161-171.',
+];
+
+function explainBlocks(R) {
+  const { dx } = R, B = [['h', 'Qué significa este resultado']];
+  if (!dx.type) {
+    B.push(['p', 'No se detectó deficiencia: se leyeron todas las láminas, incluidas las de menor diferencia de color.']);
+    B.push(['p', 'Atención: un resultado normal en pantalla no descarta una deficiencia. En un estudio de una prueba de este tipo en pantallas comerciales sin calibrar sólo se detectó al 55 % de las personas con deficiencia [1]. Si otra prueba indicó deficiencia, debe aclararse en consulta con un anomaloscopio.']);
+  } else {
+    B.push(['p', TYPE_EXPLAIN[dx.type]]);
+    B.push(['p', SEV_EXPLAIN[dx.severity]]);
+    B.push(['p', dx.confidence === 'baja'
+      ? 'Fiabilidad: como la confiabilidad de esta prueba es baja (ver motivos), este hallazgo debe confirmarse antes de tenerlo en cuenta.'
+      : 'Fiabilidad de este hallazgo: en pantallas sin calibrar, una prueba de este tipo no clasificó como deficiente a ninguna persona con visión normal (especificidad del 100 %) [1]. Que la pantalla haga fallar a alguien con visión normal es, por tanto, muy poco probable. Lo que sí puede alterar la pantalla es el tipo y el grado medidos, que deben confirmarse en consulta.']);
+    if (dx.type !== 'tritan' && dx.type !== 'no específico')
+      B.push(['p', 'Si es congénita, que es la causa más habitual en el eje rojo-verde: está presente desde el nacimiento, es igual en los dos ojos, no empeora con el tiempo, no afecta a la nitidez de la visión y se hereda ligada al cromosoma X. Afecta aproximadamente al 8 % de los hombres y al 0,5 % de las mujeres de ascendencia europea.']);
+  }
+  B.push(['h', 'Por qué esto todavía no es un diagnóstico médico']);
+  B.push(['p', '- La pantalla no está calibrada: el color que se muestra depende del modelo, el brillo y la configuración del dispositivo. Por eso las pruebas en pantalla doméstica no se aceptan como prueba diagnóstica [1].']);
+  B.push(['p', '- No hubo un examinador que controlara la distancia, el tiempo de respuesta, la iluminación ni que cada ojo se evaluara por separado.']);
+  B.push(['p', '- El tipo exacto (protan o deutan) y el grado (anomalía o dicromacia) sólo se determinan con fiabilidad con un anomaloscopio, la prueba de referencia.']);
+  B.push(['p', '- No se examinó la salud del ojo (agudeza visual, fondo de ojo, nervio óptico), necesaria para distinguir una deficiencia congénita de una adquirida por enfermedad o por medicamentos.']);
+  B.push(['p', '- Un diagnóstico es un acto profesional: lo emite y firma un oftalmólogo u optómetra habilitado después de examinar al paciente. Ningún programa puede emitirlo, pero este informe le da al profesional datos objetivos para empezar.']);
+  B.push(['h', 'Qué hacer ahora']);
+  B.push(['p', '1. Llevar este informe a un oftalmólogo u optómetra como antecedente.']);
+  B.push(['p', '2. Pedir láminas impresas (Ishihara y, si es posible, HRR, que también detecta defectos tritan y gradúa la severidad) con iluminación normalizada y cada ojo por separado.']);
+  B.push(['p', '3. Pedir el test Farnsworth D-15 para valorar el impacto funcional y el anomaloscopio para confirmar tipo y grado. El anomaloscopio es la prueba que resuelve resultados contradictorios entre exámenes.']);
+  B.push(['p', '4. Si el resultado es tritan o no específico, o si difiere entre ojos, pedir además un examen ocular completo para descartar una causa adquirida.']);
+  if (R.eye === 'ambos ojos') B.push(['p', '5. Repetir esta prueba una vez con cada ojo, tapando el otro, y llevar los dos informes.']);
+  B.push(['h', 'Sobre las gafas para daltonismo']);
+  B.push(['p', 'Hoy no existe un tratamiento que devuelva la visión del color normal en la deficiencia congénita. Las gafas con filtro (EnChroma y similares) cambian la apariencia de algunos colores y a algunas personas les resultan útiles o agradables, pero en un estudio controlado no mejoraron los resultados en pruebas diagnósticas ni hicieron la visión del color más parecida a la normal [2]. Se venden sin receta (un óptico puede hacer versiones graduadas); conviene probarlas antes de comprarlas y no llevarlas puestas durante una prueba de visión del color. Las gafas graduadas para ver nítido de lejos o de cerca son otra cosa: se determinan con un examen de refracción, independiente del daltonismo.']);
+  return B;
+}
+
 function reportBlocks(R) {
   const { plates: p, d15, dx } = R, v = verdictLines(R);
   const B = [];
   B.push(['title', 'Informe de prueba de visión del color']);
-  B.push(['meta', `Fecha: ${R.date.toLocaleString('es')}  ·  Prueba binocular por software  ·  Pantalla ${screen.width}x${screen.height} px, escala ${window.devicePixelRatio}`]);
+  B.push(['meta', `Fecha: ${R.date.toLocaleString('es')}  ·  Ojo evaluado: ${R.eye}  ·  Prueba por software  ·  Pantalla ${screen.width}x${screen.height} px, escala ${window.devicePixelRatio}`]);
   B.push(['h', 'Resultado']);
   B.push(['strong', v.head]);
   if (v.body) B.push(['p', v.body.trim()]);
   B.push(['strong', `Confiabilidad: ${dx.confidence}.`]);
   for (const r of dx.reasons) B.push(['p', '- ' + r]);
+  B.push(...explainBlocks(R));
 
   B.push(['h', 'Láminas pseudoisocromáticas: aciertos por eje y nivel']);
   B.push(['mono', 'Eje             Nivel 1 (dE 40)  Nivel 2 (dE 18)  Nivel 3 (dE 8)   Resultado']);
@@ -676,12 +740,12 @@ function reportBlocks(R) {
     `${String(i + 1).padStart(2)}  ${axisLabel[a.plate.type].padEnd(16)}${String(a.plate.level || '-').padEnd(7)}${String(a.plate.digit).padEnd(8)}${String(a.given).padEnd(11)}${a.correct ? 'acierto' : 'fallo'}`]));
 
   B.push(['h', 'Metodología']);
-  B.push(['p', `Láminas generadas por software en cada intento, con números y orden aleatorios: ${3 * 3 * PLATES_PER_LEVEL} láminas diagnósticas (${PLATES_PER_LEVEL} por nivel y eje) y 2 de control acromáticas de alto contraste. Figura y fondo se calculan en el espacio de conos LMS (fundamentales de Smith-Pokorny) modificando sólo el cono L (protan), M (deutan) o S (tritan); así ambos colores caen sobre una línea de confusión del defecto (equivalente a las rectas que pasan por los puntos copunctales en CIE xy) y, para un dicrómata de ese tipo, son iguales en color y en brillo. Cada punto varía además su luminancia +/-25 % al azar para que la figura sólo se distinga por el tono. Dificultad calibrada por diferencia de color para un observador normal (CIELAB, D65): dE 40, 18 y 8, igual en los tres ejes.`]);
-  B.push(['p', `Ordenamiento: 16 fichas equiespaciadas en tono en CIELAB (L* 70, C* 38), una fija. Análisis por el método de Vingrys y King-Smith (1988): ángulo de confusión, índice C e índice S.`]);
+  B.push(['p', `Láminas generadas por software en cada intento, con números y orden aleatorios: ${3 * 3 * PLATES_PER_LEVEL} láminas diagnósticas (${PLATES_PER_LEVEL} por nivel y eje) y 2 de control acromáticas de alto contraste. Figura y fondo se calculan en el espacio de conos LMS (fundamentales de Smith-Pokorny [4]) modificando sólo el cono L (protan), M (deutan) o S (tritan); así ambos colores caen sobre una línea de confusión del defecto (equivalente a las rectas que pasan por los puntos copunctales en CIE xy) y, para un dicrómata de ese tipo, son iguales en color y en brillo. Cada punto varía además su luminancia +/-25 % al azar para que la figura sólo se distinga por el tono. Dificultad calibrada por diferencia de color para un observador normal (CIELAB, D65): dE 40, 18 y 8, igual en los tres ejes.`]);
+  B.push(['p', `Ordenamiento: 16 fichas equiespaciadas en tono en CIELAB (L* 70, C* 38), una fija. Análisis por el método de Vingrys y King-Smith [3]: ángulo de confusión, índice C e índice S. Los umbrales (C de 1,60 o más, S de 1,50 o más) están adaptados a este juego de fichas, no a las fichas Munsell del D-15 original.`]);
   B.push(['h', 'Condiciones']);
   B.push(['p', 'Pantalla no calibrada. Antes de empezar, el paciente confirmó: brillo alto, modo nocturno desactivado, sin filtro de luz azul, sin ajuste automático de color, sin filtros de accesibilidad ni lentes con filtro de color, sin reflejos sobre la pantalla.']);
-  B.push(['h', 'Nota']);
-  B.push(['p', 'Prueba de cribado; no sustituye el examen clínico. Para el diagnóstico formal y la indicación de lentes o filtros para daltonismo se recomienda la confirmación por oftalmólogo u optómetra con pruebas estándar (Ishihara impreso con iluminación normalizada, Farnsworth D-15 o 100-Hue, anomaloscopio).']);
+  B.push(['h', 'Referencias']);
+  REFERENCES.forEach((r, i) => B.push(['small', `[${i + 1}] ${r}`]));
   return B;
 }
 
