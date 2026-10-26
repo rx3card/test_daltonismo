@@ -3,118 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prueba orientativa de visión del color</title>
+  <title>Prueba de visión del color</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles/styles.css">
   <style>
-    /* Accesibilidad: nunca comunicamos sólo con color */
-    .state-ok::before    { content: "✓ "; font-weight: 700; }
-    .state-fail::before  { content: "✗ "; font-weight: 700; }
-    .state-info::before  { content: "• "; font-weight: 700; }
-    .d15-track { display:flex; flex-wrap:wrap; gap:6px; padding:10px; border:2px dashed #666; border-radius:10px; min-height:70px; background:#f5f5f5; }
-    .d15-cap { width:46px; height:46px; border-radius:50%; border:3px solid #222; cursor:grab; position:relative; touch-action:none; }
-    .d15-cap.pilot { border-color:#000; border-width:4px; cursor:not-allowed; outline:2px dashed #000; outline-offset:2px; }
-    .d15-cap[draggable="true"]:active { cursor:grabbing; }
-    .d15-cap .lbl { position:absolute; bottom:-18px; left:0; right:0; text-align:center; font-size:11px; color:#000; }
-    .d15-slot { outline:2px dashed transparent; }
-    .d15-slot.over { outline-color:#1d4ed8; }
-    .plate-canvas { display:block; margin:0 auto; border-radius:50%; background:#000; }
+    /* Accesibilidad: los estados nunca se comunican sólo con color */
+    .state-ok::before   { content: "✓ "; font-weight: 700; }
+    .state-fail::before { content: "✗ "; font-weight: 700; }
+    .state-part::before { content: "◐ "; font-weight: 700; }
+    .state-info::before { content: "• "; font-weight: 700; }
+    .d15-track { display:flex; flex-wrap:wrap; gap:10px 8px; padding:10px 10px 24px; border:2px dashed #555; border-radius:10px; min-height:84px; background:#f5f5f5; }
+    .d15-track.over { border-style:solid; border-color:#000; }
+    /* styles.css impone padding/min-width a todos los button: lo anulamos para las fichas */
+    .d15-cap { width:46px !important; height:46px !important; min-width:0 !important; min-height:0 !important; padding:0 !important;
+               border-radius:50%; border:2px solid #222; cursor:grab; position:relative; flex:none; }
+    .d15-cap:focus-visible { outline:3px solid #000; outline-offset:3px; }
+    .d15-cap.pilot { border:4px double #000; cursor:default; }
+    .d15-cap .lbl { position:absolute; top:48px; left:-6px; right:-6px; text-align:center; font-size:11px; font-weight:700; color:#000; }
+    .plate-canvas { display:block; margin:0 auto; width:100%; max-width:min(520px, 58vh); height:auto; border-radius:50%; }
+    #d15Diagram { width:100%; max-width:440px; height:auto; }
+    @media (max-width: 640px) { nav button { padding:10px 4px !important; min-width:0 !important; font-size:12px !important; } }
   </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
   <header class="bg-white shadow-lg sticky top-0 z-10">
     <div class="container mx-auto p-4">
-      <h1 class="text-xl font-bold text-center text-blue-800 md:text-2xl">Prueba orientativa de visión del color</h1>
-      <p class="text-center text-gray-600 text-xs md:text-sm mt-1">Láminas pseudoisocromáticas generadas por código + ordenamiento D-15 · Resultado orientativo, no diagnóstico médico.</p>
+      <h1 class="text-xl font-bold text-center text-blue-800 md:text-2xl">Prueba de visión del color</h1>
+      <p class="text-center text-gray-600 text-xs md:text-sm mt-1">Láminas pseudoisocromáticas generadas por código + ordenamiento tipo D-15 · Prueba de cribado, no sustituye el examen clínico.</p>
     </div>
   </header>
 
   <main class="container mx-auto p-4 md:p-6">
-    <div class="flex flex-wrap justify-center mb-6 shadow-lg rounded-lg overflow-hidden bg-white" role="tablist">
-      <button id="prepTab"   class="flex-1 px-4 py-3 text-sm font-semibold bg-blue-600 text-white md:text-base">1. Preparación</button>
-      <button id="plateTab"  class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base" disabled>2. Láminas</button>
-      <button id="d15Tab"    class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base" disabled>3. Ordenamiento</button>
-      <button id="resultTab" class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base" disabled>4. Resultado</button>
-      <button id="pdfTab"    class="flex-1 px-4 py-3 text-sm font-semibold bg-gray-200 text-gray-800 md:text-base">PDF oficial</button>
-    </div>
+    <nav class="flex flex-wrap justify-center mb-6 shadow-lg rounded-lg overflow-hidden bg-white" aria-label="Pasos de la prueba">
+      <button id="prepTab"   class="flex-1 px-4 py-3 text-sm font-semibold md:text-base">1. Preparación</button>
+      <button id="plateTab"  class="flex-1 px-4 py-3 text-sm font-semibold md:text-base" disabled>2. Láminas</button>
+      <button id="d15Tab"    class="flex-1 px-4 py-3 text-sm font-semibold md:text-base" disabled>3. Ordenamiento</button>
+      <button id="resultTab" class="flex-1 px-4 py-3 text-sm font-semibold md:text-base" disabled>4. Resultado</button>
+      <button id="pdfTab"    class="flex-1 px-4 py-3 text-sm font-semibold md:text-base">PDF oficial</button>
+    </nav>
 
     <!-- 1. PREPARACIÓN -->
     <section id="prepSection" class="animate-fade-in">
       <div class="bg-white p-6 rounded-xl shadow-xl">
         <h2 class="text-lg md:text-xl font-bold mb-4 text-blue-800">Antes de empezar</h2>
-        <p class="text-gray-700 mb-4 text-sm md:text-base">Para que el resultado sea útil, tu pantalla no puede estar alterando los colores. Confirma cada punto antes de continuar.</p>
+        <p class="text-gray-700 mb-4 text-sm md:text-base">La pantalla no puede estar alterando los colores. Confirma cada punto; el botón no avanza hasta que estén todos marcados.</p>
         <form id="prepForm" class="space-y-3 text-sm md:text-base">
-          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span><strong>Brillo al máximo</strong> (o cerca). Mira la lámina de control desde ~50 cm.</span></label>
-          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé <strong>modo nocturno / Night Shift / Night Light / f.lux</strong>.</span></label>
-          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé el <strong>filtro de luz azul</strong> del navegador y del sistema.</span></label>
-          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé el <strong>ajuste automático de color/temperatura</strong> (TrueTone, adaptive color).</span></label>
-          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>No estoy usando filtros de accesibilidad de color del sistema operativo.</span></label>
-          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Luz ambiente suave, no reflejos directos sobre la pantalla.</span></label>
-          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Entiendo que esto es <strong>orientativo</strong>, no un diagnóstico médico.</span></label>
-          <button id="startBtn" type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 w-full md:w-auto">Empezar</button>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span><strong>Brillo de la pantalla al máximo</strong> (o muy alto). Me siento a unos 50 cm.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé el <strong>modo nocturno</strong> (Night Shift, Luz nocturna, f.lux, modo lectura).</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé cualquier <strong>filtro de luz azul</strong> del sistema, del navegador o de la pantalla.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Desactivé el <strong>ajuste automático de color</strong> (True Tone, color adaptativo, brillo/contraste dinámico).</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>No uso <strong>filtros de color de accesibilidad</strong> ni modo de alto contraste, y no llevo gafas o lentes con filtro de color.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Luz ambiente normal, sin reflejos directos sobre la pantalla.</span></label>
+          <label class="flex items-start gap-3"><input type="checkbox" class="mt-1 w-5 h-5" required> <span>Responderé lo que vea sin adivinar; si no veo número, pulsaré <strong>"No veo ningún número"</strong>.</span></label>
+          <button id="startBtn" type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg w-full md:w-auto">Confirmo y empiezo ▶</button>
         </form>
       </div>
     </section>
 
     <!-- 2. LÁMINAS -->
     <section id="plateSection" class="hidden animate-fade-in">
-      <div class="bg-white p-6 rounded-xl shadow-xl">
-        <p id="plateProgress" class="text-center text-gray-700 mb-3 text-sm md:text-base"></p>
-        <canvas id="plateCanvas" class="plate-canvas" width="520" height="520" aria-label="Lámina pseudoisocromática"></canvas>
-        <div class="mt-4 text-center">
-          <label for="plateAnswer" class="block text-sm text-gray-700 mb-2">¿Qué número ves? (sólo dígitos)</label>
-          <input id="plateAnswer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" class="border p-2 rounded text-center w-40">
+      <div class="bg-white p-4 md:p-6 rounded-xl shadow-xl">
+        <p id="plateProgress" class="text-center text-gray-700 mb-3 text-sm md:text-base" aria-live="polite"></p>
+        <canvas id="plateCanvas" class="plate-canvas" width="520" height="520" role="img" aria-label="Lámina de puntos de colores con un número"></canvas>
+        <form id="plateForm" class="mt-4 text-center">
+          <label for="plateAnswer" class="block text-sm text-gray-700 mb-2">¿Qué número ves? (sólo cifras)</label>
+          <input id="plateAnswer" type="text" inputmode="numeric" autocomplete="off" maxlength="3" class="border border-gray-500 p-2 rounded text-center w-40">
           <div class="flex flex-wrap gap-2 justify-center mt-3">
-            <button id="plateSubmit" class="bg-green-600 text-white px-4 py-2 rounded">Responder</button>
-            <button id="plateSkip" class="bg-gray-500 text-white px-4 py-2 rounded">No veo ningún número</button>
+            <button id="plateSubmit" type="submit" class="bg-blue-700 text-white px-4 py-2 rounded">Responder ▶</button>
+            <button id="plateSkip" type="button" class="bg-white text-gray-900 border-2 border-gray-700 px-4 py-2 rounded">⊘ No veo ningún número</button>
           </div>
-        </div>
+        </form>
       </div>
     </section>
 
     <!-- 3. D-15 -->
     <section id="d15Section" class="hidden animate-fade-in">
-      <div class="bg-white p-6 rounded-xl shadow-xl">
-        <h2 class="text-lg md:text-xl font-bold mb-3 text-blue-800">Ordenamiento de tonos (D-15 simplificado)</h2>
-        <p class="text-gray-700 text-sm md:text-base mb-3">Arrastra las fichas de la <strong>reserva</strong> a la <strong>fila ordenada</strong>. La ficha fija es tu punto de partida; coloca el resto de forma que cada una se parezca lo más posible a la anterior. También podés arrastrar fichas ya puestas para reordenarlas.</p>
-        <p class="text-sm text-gray-600 mb-2 state-info">Fila ordenada (arrastrá aquí):</p>
-        <div id="d15Order" class="d15-track" aria-label="Fila ordenada"></div>
-        <p class="text-sm text-gray-600 mt-4 mb-2 state-info">Reserva (fichas por colocar):</p>
-        <div id="d15Pool" class="d15-track" aria-label="Reserva de fichas"></div>
-        <div class="text-center mt-4">
-          <button id="d15Submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg">Terminar y ver resultado</button>
+      <div class="bg-white p-4 md:p-6 rounded-xl shadow-xl">
+        <h2 class="text-lg md:text-xl font-bold mb-3 text-blue-800">Ordenamiento de tonos (tipo D-15)</h2>
+        <p class="text-gray-700 text-sm md:text-base mb-3">Empieza por la ficha marcada <strong>FIJA</strong>. Pon a continuación la ficha de la reserva que más se le parezca, luego la que más se parezca a esa, y así hasta colocar las 15.</p>
+        <ul class="text-gray-700 text-sm mb-3 list-disc pl-6">
+          <li><strong>Tocar o pulsar</strong> una ficha de la reserva la coloca al final de la fila.</li>
+          <li><strong>Tocar o pulsar</strong> una ficha de la fila la devuelve a la reserva.</li>
+          <li>Con ratón puedes <strong>arrastrar</strong> fichas a cualquier posición. Con teclado: <kbd>Tab</kbd> para elegir, <kbd>Enter</kbd> para mover, <kbd>←</kbd> <kbd>→</kbd> para cambiar su posición en la fila.</li>
+        </ul>
+        <p class="text-sm font-semibold mb-1">Fila ordenada <span id="d15Count" class="font-normal"></span></p>
+        <div id="d15Order" class="d15-track" role="list" aria-label="Fila ordenada"></div>
+        <p class="text-sm font-semibold mt-4 mb-1">Reserva</p>
+        <div id="d15Pool" class="d15-track" role="list" aria-label="Reserva de fichas"></div>
+        <p id="d15Msg" class="text-sm mt-3 text-center" role="alert"></p>
+        <div class="text-center mt-3">
+          <button id="d15Submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg">Terminar y ver resultado ▶</button>
         </div>
       </div>
     </section>
 
     <!-- 4. RESULTADO -->
     <section id="resultSection" class="hidden animate-fade-in">
-      <div class="bg-white p-6 rounded-xl shadow-xl">
-        <h2 class="text-xl md:text-2xl font-bold mb-2 text-blue-800">Resultado orientativo</h2>
-        <div id="verdict" class="p-4 rounded-lg border-2 border-gray-300 bg-gray-50 mb-4 text-base md:text-lg"></div>
+      <div class="bg-white p-4 md:p-6 rounded-xl shadow-xl">
+        <h2 class="text-xl md:text-2xl font-bold mb-3 text-blue-800">Resultado</h2>
+        <div id="verdict" class="p-4 rounded-lg border-2 border-gray-800 bg-gray-50 mb-4 text-base md:text-lg"></div>
+        <div class="text-center mb-6">
+          <button id="exportPDF" class="bg-blue-700 text-white px-5 py-3 rounded-lg">⤓ Descargar informe PDF</button>
+          <button id="exportResult" class="bg-white text-gray-900 border-2 border-gray-700 px-4 py-3 rounded-lg">⧉ Copiar resumen</button>
+        </div>
         <h3 class="font-bold mb-2">Datos que lo respaldan</h3>
         <div id="breakdown" class="text-sm md:text-base overflow-x-auto"></div>
-        <h3 class="font-bold mt-4 mb-2">Diagrama del ordenamiento D-15</h3>
-        <canvas id="d15Diagram" width="420" height="420" class="mx-auto block border border-gray-300 rounded"></canvas>
-        <p class="text-xs text-gray-600 mt-2 text-center">Las líneas que cruzan el círculo coinciden con un eje de confusión; el eje aproximado se marca en negro.</p>
-        <p class="text-xs text-gray-500 mt-4 italic">Esto es un resultado orientativo generado por software en una pantalla no calibrada. Un diagnóstico formal requiere un examen con un profesional (optómetra u oftalmólogo) en condiciones controladas.</p>
+        <h3 class="font-bold mt-6 mb-2">Diagrama del ordenamiento</h3>
+        <canvas id="d15Diagram" width="440" height="440" class="mx-auto block border border-gray-300 rounded" role="img" aria-label="Diagrama del ordenamiento de tonos"></canvas>
+        <p class="text-xs text-gray-700 mt-2 text-center">Números = orden correcto (P = ficha fija). Línea continua = tu orden. Líneas punteadas finas = ejes teóricos protan (Pro), deutan (Deu) y tritan (Tri). Línea discontinua gruesa = eje de tus errores.</p>
+        <p class="text-xs text-gray-600 mt-4 italic">Prueba de cribado por software en una pantalla no calibrada. Para el diagnóstico formal y la indicación de lentes o filtros, lleva este informe a tu oftalmólogo u optómetra.</p>
         <div class="text-center mt-4">
-          <button id="restart" class="bg-gray-600 text-white px-4 py-2 rounded">Reiniciar</button>
-          <button id="exportResult" class="bg-gray-500 text-white px-4 py-2 rounded">Copiar resumen</button>
-          <button id="exportPDF" class="bg-blue-600 text-white px-4 py-2 rounded">Descargar informe PDF</button>
+          <button id="restart" class="bg-white text-gray-900 border-2 border-gray-700 px-4 py-2 rounded">↺ Hacer la prueba de nuevo</button>
         </div>
       </div>
     </section>
 
-    <!-- PDF -->
+    <!-- PDF oficial -->
     <section id="pdfSection" class="hidden animate-fade-in">
-      <div id="pdfError" class="hidden text-red-600 mb-4 text-center text-sm">No se pudo cargar el PDF. Servilo desde un servidor local (p. ej. <code>python -m http.server</code>). <a class="underline" href="documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf" download>Descargar</a></div>
+      <div id="pdfError" class="hidden mb-4 text-center text-sm" role="alert">✗ No se pudo cargar el PDF. Sírvelo desde un servidor (p. ej. <code>python -m http.server</code>). <a class="underline" href="documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf" download>Descargar</a></div>
       <div class="flex flex-wrap justify-between mb-4 gap-2">
-        <button id="prevPage" class="bg-blue-500 text-white px-4 py-2 rounded flex-1">Anterior</button>
+        <button id="prevPage" class="bg-blue-700 text-white px-4 py-2 rounded flex-1">◀ Anterior</button>
         <span id="pageInfo" class="self-center text-gray-700 text-sm"></span>
-        <button id="nextPage" class="bg-blue-500 text-white px-4 py-2 rounded flex-1">Siguiente</button>
+        <button id="nextPage" class="bg-blue-700 text-white px-4 py-2 rounded flex-1">Siguiente ▶</button>
       </div>
       <div class="bg-white p-4 rounded-xl shadow-xl"><canvas id="pdfCanvas" class="border border-gray-200 w-full rounded-lg"></canvas></div>
     </section>
@@ -122,681 +134,604 @@
 
   <footer class="bg-white shadow-inner mt-8 py-4">
     <div class="container mx-auto text-center text-gray-600 text-xs md:text-sm">
-      <p>Prueba orientativa de visión del color · uso personal</p>
+      <p>Prueba de visión del color · uso personal</p>
     </div>
   </footer>
 
 <script>
 /* =========================================================================
-   COLOR SCIENCE
+   CIENCIA DEL COLOR
    -------------------------------------------------------------------------
-   Láminas pseudoisocromáticas: figura y fondo elegidos sobre la línea de
-   confusión del defecto (protan, deutan o tritan) en CIE xy.
+   Las láminas se construyen en el espacio de conos LMS (fundamentales de
+   Smith-Pokorny), no en RGB ni a ojo:
 
-   Procedimiento (comentado para auditoría):
-   1) Blanco de referencia: D65 ≈ (0.3127, 0.3290).
-   2) Puntos copunctales clásicos (donde todas las líneas de confusión
-      convergen para cada tipo):
-         protan  (0.747,  0.253)
-         deutan  (1.080, -0.800)
-         tritan  (0.171,  0.000)
-   3) Para cada tipo, la línea de confusión que pasa por D65 es la recta
-      D65 → copunctal. Elegimos dos cromaticidades sobre esa recta a
-      distancias ±d del neutro; a un dicrómata del tipo correspondiente
-      se le confunden. Un tricrómata normal las distingue.
-   4) Convertimos (x, y, Y) → XYZ → sRGB lineal (matriz D65) → sRGB con
-      gamma. Si algún canal sale fuera de [0,1] reducimos d y
-      reintentamos hasta que entre en gamut.
-   5) En cada punto variamos Y aleatoriamente ±20 %: así, si alguien
-      pudiera "leer" el número por diferencias de brillo residuales, el
-      ruido de luminancia las enmascara. Esto es lo que falta en los
-      JPGs comprimidos y lo que hace válida la lámina.
+   1) Partimos de un gris neutro D65 con luminancia Y = 0.30 y lo pasamos a
+      LMS (L = conos "rojos", M = "verdes", S = "azules").
+   2) Figura y fondo = ese gris con SÓLO un cono modificado ±k:
+         protan -> sólo L,  deutan -> sólo M,  tritan -> sólo S.
+      Un protanope no tiene conos L, así que ve figura y fondo con los
+      mismos M y S: idénticos en color Y EN BRILLO (su luminancia depende
+      de M). Lo mismo para deutan (L) y tritan (L+M intactos). Esto es
+      exactamente una línea de confusión: en CIE xy equivale a la recta
+      que pasa por el gris y el punto copunctal (0.747, 0.253) protan,
+      (1.080, -0.800) deutan o (0.171, 0.000) tritan.
+   3) k se calcula (bisección) para una diferencia de color fija para un
+      observador normal: dE CIELAB 40 / 18 / 8 en los niveles 1 / 2 / 3.
+      Así los tres ejes tienen la misma dificultad real.
+   4) Cada punto escala su luminancia al azar ±25 % (misma cromaticidad).
+      El ruido supera cualquier diferencia de brillo residual, de modo que
+      el número sólo se distingue por el tono.
+   5) LMS -> XYZ -> sRGB lineal (D65) -> sRGB con gamma. El autotest del
+      final comprueba que todo cae dentro del gamut sRGB, incluso con el
+      ruido, para que ningún color se recorte en silencio.
+   Limitación conocida: Smith-Pokorny está definido sobre XYZ Judd-Vos y
+   sRGB sobre CIE 1931; la diferencia es pequeña frente a la variación
+   entre pantallas no calibradas.
    ========================================================================= */
+const AXES = ['protan', 'deutan', 'tritan'];
+const CONE = { protan: 0, deutan: 1, tritan: 2 };
+const LEVEL_DE = { 1: 40, 2: 18, 3: 8 };
+const PLATES_PER_LEVEL = 2;
+const BASE_Y = 0.30;
+const JITTER = 0.25;
 
-const WHITE_XY = {x: 0.3127, y: 0.3290};
-const COPUNCTAL = {
-  protan: {x: 0.747, y: 0.253},
-  deutan: {x: 1.080, y: -0.800},
-  tritan: {x: 0.171, y: 0.000},
-};
-
-function unitDir(from, to) {
-  const dx = to.x - from.x, dy = to.y - from.y;
-  const n = Math.hypot(dx, dy);
-  return {x: dx/n, y: dy/n};
+const mul = (A, v) => A.map(r => r[0]*v[0] + r[1]*v[1] + r[2]*v[2]);
+function inv3(m) {
+  const [a, b, c] = m[0], [d, e, f] = m[1], [g, h, i] = m[2];
+  const A = e*i - f*h, B = f*g - d*i, C = d*h - e*g, det = a*A + b*B + c*C;
+  return [[A, c*h - b*i, b*f - c*e], [B, a*i - c*g, c*d - a*f], [C, b*g - a*h, a*e - b*d]].map(r => r.map(x => x / det));
 }
-const DIR = {
-  protan: unitDir(WHITE_XY, COPUNCTAL.protan),
-  deutan: unitDir(WHITE_XY, COPUNCTAL.deutan),
-  tritan: unitDir(WHITE_XY, COPUNCTAL.tritan),
-};
+const SP = [[0.15514, 0.54312, -0.03286], [-0.15514, 0.45684, 0.03286], [0, 0, 0.00801]];
+const SP_INV = inv3(SP);
+const XYZ_TO_RGB = [[3.2406, -1.5372, -0.4986], [-0.9689, 1.8758, 0.0415], [0.0557, -0.2040, 1.0570]];
+const WHITE = [0.95047, 1, 1.08883];
 
-// sRGB matrix (D65)
-const M = [
-  [ 3.2406, -1.5372, -0.4986],
-  [-0.9689,  1.8758,  0.0415],
-  [ 0.0557, -0.2040,  1.0570],
-];
-function xyYtoRGB(x, y, Y) {
-  if (y <= 0) return null;
-  const X = x*Y/y, Z = (1-x-y)*Y/y;
-  const rl = M[0][0]*X + M[0][1]*Y + M[0][2]*Z;
-  const gl = M[1][0]*X + M[1][1]*Y + M[1][2]*Z;
-  const bl = M[2][0]*X + M[2][1]*Y + M[2][2]*Z;
-  if ([rl,gl,bl].some(v => v < 0 || v > 1)) return null;
-  const enc = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055;
-  return [Math.round(enc(rl)*255), Math.round(enc(gl)*255), Math.round(enc(bl)*255)];
-}
-
-// Pareja figura/fondo sobre la línea de confusión del tipo dado.
-// `d` = distancia en xy (cuánto se separan del neutro). Más chico = más difícil.
-function confusionPair(type, d, Yfig = 0.5, Ybg = 0.5) {
-  const dir = DIR[type];
-  for (let k = d; k > 0.005; k -= 0.005) {
-    const fig = {x: WHITE_XY.x + dir.x*k, y: WHITE_XY.y + dir.y*k};
-    const bg  = {x: WHITE_XY.x - dir.x*k, y: WHITE_XY.y - dir.y*k};
-    const rgbF = xyYtoRGB(fig.x, fig.y, Yfig);
-    const rgbB = xyYtoRGB(bg.x,  bg.y,  Ybg);
-    if (rgbF && rgbB) return {fig: rgbF, bg: rgbB, actualD: k};
-  }
-  return null;
-}
-
-// Variación aleatoria de luminancia por punto: mata la pista de brillo.
-function jitterY(base) { return base * (0.80 + Math.random()*0.40); }
-function colorWithJitter(xy, baseY) {
-  for (let tries = 0; tries < 6; tries++) {
-    const Y = jitterY(baseY);
-    const rgb = xyYtoRGB(xy.x, xy.y, Y);
-    if (rgb) return rgb;
-  }
-  return xyYtoRGB(xy.x, xy.y, baseY);
-}
-
-/* =========================================================================
-   RENDER DE LÁMINAS
-   ========================================================================= */
-function renderPlate(canvas, {type, digit, d}) {
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-
-  // Máscara: dibujamos el dígito en un canvas offscreen para saber qué puntos caen "dentro"
-  const mask = document.createElement('canvas');
-  mask.width = W; mask.height = H;
-  const mctx = mask.getContext('2d');
-  mctx.fillStyle = '#000'; mctx.fillRect(0, 0, W, H);
-  mctx.fillStyle = '#fff';
-  mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
-  mctx.font = 'bold 300px sans-serif';
-  mctx.fillText(String(digit), W/2, H/2 + 10);
-  const maskData = mctx.getImageData(0, 0, W, H).data;
-
-  const isFigure = (x, y) => {
-    const i = (Math.floor(y)*W + Math.floor(x)) * 4;
-    return maskData[i] > 128;
-  };
-
-  let figXY, bgXY, baseFigRGB, baseBgRGB;
-  if (type === 'control') {
-    figXY = null; bgXY = null;
-  } else {
-    // Usar confusionPair que ya reduce d hasta encontrar un par válido en sRGB
-    const pair = confusionPair(type, d);
-    const dir = DIR[type];
-    const kd = pair ? pair.actualD : d;
-    figXY = {x: WHITE_XY.x + dir.x*kd, y: WHITE_XY.y + dir.y*kd};
-    bgXY  = {x: WHITE_XY.x - dir.x*kd, y: WHITE_XY.y - dir.y*kd};
-    baseFigRGB = pair ? pair.fig : [128,128,128];
-    baseBgRGB  = pair ? pair.bg  : [128,128,128];
-  }
-
-  // Círculo recortado
-  ctx.save();
-  ctx.beginPath(); ctx.arc(W/2, H/2, W/2 - 2, 0, Math.PI*2); ctx.clip();
-
-  const R = W/2 - 2, cx = W/2, cy = H/2;
-  const dots = 2200;
-  let placed = 0, tries = 0;
-  const placedDots = [];
-  while (placed < dots && tries < dots*20) {
-    tries++;
-    const x = Math.random() * W, y = Math.random() * H;
-    if (Math.hypot(x - cx, y - cy) > R) continue;
-    const r = 4 + Math.random()*5;
-    // Evitar solapamientos excesivos (muestreo tipo Poisson simplificado)
-    let bad = false;
-    for (let i = Math.max(0, placedDots.length - 40); i < placedDots.length; i++) {
-      const p = placedDots[i];
-      if (Math.hypot(x - p.x, y - p.y) < (r + p.r) * 0.75) { bad = true; break; }
-    }
-    if (bad) continue;
-    const fig = isFigure(x, y);
-    let rgb;
-    if (type === 'control') {
-      rgb = fig ? [40, 40, 40] : [210, 210, 210];
-    } else {
-      rgb = fig ? colorWithJitter(figXY, 0.50) : colorWithJitter(bgXY, 0.50);
-      if (!rgb) rgb = fig ? baseFigRGB : baseBgRGB;
-    }
-    ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-    placedDots.push({x, y, r});
-    placed++;
-  }
-  ctx.restore();
-}
-
-/* =========================================================================
-   LISTA DE LÁMINAS
-   Niveles: 1 = fácil (d grande), 2 = medio, 3 = difícil (d chico)
-   ========================================================================= */
-const LEVELS = { 1: 0.085, 2: 0.045, 3: 0.025 };
-function buildPlateSet() {
-  const digits = () => Math.floor(10 + Math.random()*90); // dos cifras, aleatorio
-  const plates = [
-    { type:'control', level:0, digit: digits(), d: 0 }, // control: todos
-  ];
-  for (const type of ['protan','deutan','tritan']) {
-    for (const lvl of [1, 2, 3]) {
-      plates.push({ type, level: lvl, digit: digits(), d: LEVELS[lvl] });
-    }
-  }
-  // Orden aleatorio
-  for (let i = plates.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [plates[i], plates[j]] = [plates[j], plates[i]];
-  }
-  return plates;
-}
-
-/* =========================================================================
-   D-15 — anillo de 15 fichas en CIELAB a L=70, C=38
-   ========================================================================= */
-function labToRGB(L, a, b) {
-  // D65
-  const Xn = 0.95047, Yn = 1.0, Zn = 1.08883;
-  const fy = (L + 16) / 116, fx = fy + a/500, fz = fy - b/200;
-  const f = t => t*t*t > 0.008856 ? t*t*t : (t - 16/116) / 7.787;
-  const X = Xn * f(fx), Y = Yn * f(fy), Z = Zn * f(fz);
-  const rl = M[0][0]*X + M[0][1]*Y + M[0][2]*Z;
-  const gl = M[1][0]*X + M[1][1]*Y + M[1][2]*Z;
-  const bl = M[2][0]*X + M[2][1]*Y + M[2][2]*Z;
-  const enc = v => Math.max(0, Math.min(1, v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(Math.max(v,0), 1/2.4) - 0.055));
-  return [Math.round(enc(rl)*255), Math.round(enc(gl)*255), Math.round(enc(bl)*255)];
-}
-function d15Caps() {
-  const N = 16;              // 1 piloto + 15 móviles
-  const L = 70, C = 38;
-  const caps = [];
-  for (let i = 0; i < N; i++) {
-    const h = (i / N) * 2 * Math.PI;
-    const a = C * Math.cos(h), b = C * Math.sin(h);
-    const rgb = labToRGB(L, a, b);
-    caps.push({ id: i, hue: h, a, b, rgb });
-  }
-  return caps;
-}
-
-/* =========================================================================
-   ESTADO Y FLUJO
-   ========================================================================= */
-const state = {
-  plates: [],
-  plateIdx: 0,
-  answers: [],      // {plate, userAnswer, correct}
-  d15Order: [],     // ids colocados por el usuario (incluye piloto en pos 0)
-  d15Caps: [],
-};
-
-const el = id => document.getElementById(id);
-const sections = ['prepSection','plateSection','d15Section','resultSection','pdfSection'];
-const tabs = { prepSection:'prepTab', plateSection:'plateTab', d15Section:'d15Tab', resultSection:'resultTab', pdfSection:'pdfTab' };
-function show(sec) {
-  sections.forEach(s => el(s).classList.toggle('hidden', s !== sec));
-  Object.entries(tabs).forEach(([s, t]) => {
-    el(t).classList.toggle('bg-blue-600', s === sec);
-    el(t).classList.toggle('text-white',  s === sec);
-    el(t).classList.toggle('bg-gray-200', s !== sec);
-    el(t).classList.toggle('text-gray-800', s !== sec);
+function xyzToRGB(XYZ) {
+  const lin = mul(XYZ_TO_RGB, XYZ);
+  if (lin.some(v => v < -1e-6 || v > 1 + 1e-6)) return null;
+  return lin.map(v => {
+    v = Math.min(1, Math.max(0, v));
+    return Math.round(255 * (v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055));
   });
 }
-el('prepTab').onclick = () => show('prepSection');
-el('plateTab').onclick = () => !el('plateTab').disabled && show('plateSection');
-el('d15Tab').onclick = () => !el('d15Tab').disabled && show('d15Section');
-el('resultTab').onclick = () => !el('resultTab').disabled && show('resultSection');
-el('pdfTab').onclick = () => { show('pdfSection'); if (!pdfDoc) loadPDF(); };
+function xyzToLab(XYZ) {
+  const f = t => t > 0.008856 ? Math.cbrt(t) : 7.787*t + 16/116;
+  const [fx, fy, fz] = XYZ.map((v, i) => f(v / WHITE[i]));
+  return [116*fy - 16, 500*(fx - fy), 200*(fy - fz)];
+}
+function labToXYZ(L, a, b) {
+  const fy = (L + 16)/116, fx = fy + a/500, fz = fy - b/200;
+  const f = t => t**3 > 0.008856 ? t**3 : (t - 16/116)/7.787;
+  return [WHITE[0]*f(fx), WHITE[1]*f(fy), WHITE[2]*f(fz)];
+}
+const deltaE = (p, q) => { const a = xyzToLab(p), b = xyzToLab(q); return Math.hypot(a[0]-b[0], a[1]-b[1], a[2]-b[2]); };
+const css = rgb => `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
 
-/* --- Preparación --- */
+function confusionPair(axis, k) {
+  const lms = mul(SP, WHITE.map(v => v * BASE_Y));
+  const fig = [...lms], bg = [...lms];
+  fig[CONE[axis]] *= 1 + k;
+  bg[CONE[axis]]  *= 1 - k;
+  return { fig: mul(SP_INV, fig), bg: mul(SP_INV, bg) };
+}
+function pairForDeltaE(axis, target) {
+  let lo = 0, hi = 0.95, k = 0;
+  for (let n = 0; n < 50; n++) {
+    k = (lo + hi) / 2;
+    const p = confusionPair(axis, k);
+    if (deltaE(p.fig, p.bg) < target) lo = k; else hi = k;
+  }
+  const p = confusionPair(axis, k);
+  return { ...p, k, dE: deltaE(p.fig, p.bg) };
+}
+const PAIRS = {};
+for (const axis of AXES) {
+  PAIRS[axis] = {};
+  for (const level of [1, 2, 3]) PAIRS[axis][level] = pairForDeltaE(axis, LEVEL_DE[level]);
+}
+// Dirección de cada eje de confusión en el plano a*b* (grados, módulo 180).
+// Sale de la propia construcción: protan ≈ 11°, deutan ≈ 175°, tritan ≈ 121°.
+const AXIS_ANGLE = {};
+for (const axis of AXES) {
+  const f = xyzToLab(PAIRS[axis][3].fig), b = xyzToLab(PAIRS[axis][3].bg);
+  AXIS_ANGLE[axis] = ((Math.atan2(f[2] - b[2], f[1] - b[1]) * 180/Math.PI) % 180 + 180) % 180;
+}
+const axisDist = (a, b) => { const d = Math.abs(a - b) % 180; return Math.min(d, 180 - d); };
+const nearestAxis = deg => AXES.reduce((best, ax) => axisDist(deg, AXIS_ANGLE[ax]) < axisDist(deg, AXIS_ANGLE[best]) ? ax : best);
+
+/* =========================================================================
+   LÁMINAS
+   ========================================================================= */
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const randomNumber = () => 10 + Math.floor(Math.random() * 90);
+
+function buildPlateSet() {
+  const plates = [{ type: 'control', level: 0, digit: randomNumber() }];
+  for (const type of AXES) for (const level of [1, 2, 3]) for (let r = 0; r < PLATES_PER_LEVEL; r++)
+    plates.push({ type, level, digit: randomNumber() });
+  // Primera lámina = control (como la lámina de demostración de Ishihara); la otra va al azar.
+  return [{ type: 'control', level: 0, digit: randomNumber() }, ...shuffle(plates)];
+}
+
+function renderPlate(canvas, plate) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, cx = W/2, R = W/2 - 2;
+  ctx.clearRect(0, 0, W, W);
+
+  const mask = document.createElement('canvas');
+  mask.width = mask.height = W;
+  const m = mask.getContext('2d');
+  m.fillStyle = '#fff'; m.textAlign = 'center'; m.textBaseline = 'middle';
+  m.font = 'bold 290px sans-serif';
+  m.fillText(String(plate.digit), cx, cx + 12);
+  const maskData = m.getImageData(0, 0, W, W).data;
+  const isFigure = (x, y) => maskData[(Math.floor(y) * W + Math.floor(x)) * 4 + 3] > 128;
+
+  const pair = plate.type === 'control' ? null : PAIRS[plate.type][plate.level];
+  const colorAt = fig => {
+    const s = 1 - JITTER + Math.random() * 2 * JITTER;
+    if (!pair) return xyzToRGB(WHITE.map(v => v * (fig ? 0.06 : 0.45) * s));
+    return xyzToRGB((fig ? pair.fig : pair.bg).map(v => v * s));
+  };
+
+  // Muestreo de discos sin solaparse con una rejilla espacial
+  const CELL = 10, grid = new Map(), key = (i, j) => i * 1000 + j;
+  let placed = 0;
+  for (let tries = 0; tries < 60000 && placed < 2600; tries++) {
+    const ang = Math.random() * 2 * Math.PI, rr = R * Math.sqrt(Math.random());
+    const x = cx + rr * Math.cos(ang), y = cx + rr * Math.sin(ang);
+    const r = 3 + Math.random() * 6;
+    if (Math.hypot(x - cx, y - cx) + r > R) continue;
+    const gi = Math.floor(x / CELL), gj = Math.floor(y / CELL);
+    let free = true;
+    for (let i = gi - 2; i <= gi + 2 && free; i++) for (let j = gj - 2; j <= gj + 2 && free; j++)
+      for (const d of grid.get(key(i, j)) || []) if (Math.hypot(x - d.x, y - d.y) < r + d.r + 1) { free = false; break; }
+    if (!free) continue;
+    (grid.get(key(gi, gj)) || grid.set(key(gi, gj), []).get(key(gi, gj))).push({ x, y, r });
+    ctx.fillStyle = css(colorAt(isFigure(x, y)));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.fill();
+    placed++;
+  }
+}
+
+/* =========================================================================
+   ORDENAMIENTO TIPO D-15: 16 fichas en CIELAB (L*=70, C*=38), ficha 0 fija
+   ========================================================================= */
+const D15_N = 16, D15_L = 70, D15_C = 38;
+function makeD15Caps() {
+  const labels = shuffle('ABCDEFGHJKLMNRS'.split(''));
+  return Array.from({ length: D15_N }, (_, i) => {
+    const h = i / D15_N * 2 * Math.PI, a = D15_C * Math.cos(h), b = D15_C * Math.sin(h);
+    // Letras al azar: no revelan el orden correcto (ni a la vista ni al lector de pantalla)
+    return { id: i, a, b, rgb: xyzToRGB(labToXYZ(D15_L, a, b)), label: i === 0 ? 'FIJA' : labels[i - 1] };
+  });
+}
+
+/* =========================================================================
+   ESTADO Y NAVEGACIÓN
+   ========================================================================= */
+const state = { plates: [], plateIdx: 0, answers: [], d15Caps: [], d15Order: [0], d15Pool: [], dragId: null, result: null };
+const el = id => document.getElementById(id);
+const TABS = { prepSection: 'prepTab', plateSection: 'plateTab', d15Section: 'd15Tab', resultSection: 'resultTab', pdfSection: 'pdfTab' };
+function show(sec) {
+  for (const [s, t] of Object.entries(TABS)) {
+    const on = s === sec;
+    el(s).classList.toggle('hidden', !on);
+    el(t).classList.toggle('bg-blue-700', on);
+    el(t).classList.toggle('text-white', on);
+    el(t).classList.toggle('bg-gray-200', !on);
+    el(t).classList.toggle('text-gray-900', !on);
+    el(t).style.textDecoration = on ? 'underline' : 'none';
+    on ? el(t).setAttribute('aria-current', 'step') : el(t).removeAttribute('aria-current');
+  }
+  window.scrollTo(0, 0);
+}
+for (const [s, t] of Object.entries(TABS)) el(t).onclick = () => { show(s); if (s === 'pdfSection' && !pdfDoc) loadPDF(); };
+
 el('prepForm').addEventListener('submit', e => {
   e.preventDefault();
-  startPlates();
-});
-
-function startPlates() {
   state.plates = buildPlateSet();
   state.plateIdx = 0;
   state.answers = [];
   el('plateTab').disabled = false;
+  el('d15Tab').disabled = el('resultTab').disabled = true;
   show('plateSection');
   nextPlate();
-}
+});
 
 function nextPlate() {
-  if (state.plateIdx >= state.plates.length) { startD15(); return; }
-  const p = state.plates[state.plateIdx];
+  if (state.plateIdx >= state.plates.length) return startD15();
   el('plateProgress').textContent = `Lámina ${state.plateIdx + 1} de ${state.plates.length}`;
   el('plateAnswer').value = '';
-  renderPlate(el('plateCanvas'), p);
-  el('plateAnswer').focus();
+  renderPlate(el('plateCanvas'), state.plates[state.plateIdx]);
+  window.scrollTo(0, 0);
+  el('plateAnswer').focus({ preventScroll: true });
 }
-el('plateSubmit').onclick = () => recordPlate(el('plateAnswer').value.trim());
-el('plateSkip').onclick   = () => recordPlate('');
-el('plateAnswer').addEventListener('keypress', e => { if (e.key === 'Enter') el('plateSubmit').click(); });
-
-function recordPlate(answerRaw) {
-  const p = state.plates[state.plateIdx];
-  const expected = String(p.digit);
-  const given = answerRaw.replace(/\D/g, '');
-  const correct = given === expected;
-  state.answers.push({ plate: p, given: answerRaw, correct });
+function recordPlate(raw) {
+  const plate = state.plates[state.plateIdx];
+  const given = raw.replace(/\D/g, '');
+  state.answers.push({ plate, given: given || '—', correct: given === String(plate.digit) });
   state.plateIdx++;
   nextPlate();
 }
+el('plateForm').addEventListener('submit', e => { e.preventDefault(); recordPlate(el('plateAnswer').value); });
+el('plateSkip').onclick = () => recordPlate('');
 
-/* --- D-15 --- */
+/* --- D-15: tocar, teclado y arrastrar --- */
 function startD15() {
-  state.d15Caps = d15Caps();
-  // piloto = cap 0; el resto va a la reserva, barajado
-  const rest = state.d15Caps.slice(1);
-  for (let i = rest.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [rest[i], rest[j]] = [rest[j], rest[i]];
-  }
-  state.d15Pool = rest.map(c => c.id);
-  state.d15OrderIds = [0]; // piloto fijo en posición 0
+  state.d15Caps = makeD15Caps();
+  state.d15Order = [0];
+  state.d15Pool = shuffle(state.d15Caps.slice(1).map(c => c.id));
+  el('d15Msg').textContent = '';
   el('d15Tab').disabled = false;
   show('d15Section');
   renderD15();
 }
-
-function makeCapEl(cap, draggable) {
-  const d = document.createElement('div');
-  d.className = 'd15-cap' + (draggable ? '' : ' pilot');
-  d.style.background = `rgb(${cap.rgb[0]},${cap.rgb[1]},${cap.rgb[2]})`;
-  d.dataset.id = cap.id;
-  if (draggable) d.setAttribute('draggable', 'true');
-  d.setAttribute('role', 'listitem');
-  d.setAttribute('aria-label', draggable ? `Ficha ${cap.id}` : 'Ficha fija de partida');
-  if (!draggable) {
-    const lbl = document.createElement('span');
-    lbl.className = 'lbl'; lbl.textContent = 'FIJA';
-    d.appendChild(lbl);
+function capButton(id, zone, pos) {
+  const cap = state.d15Caps[id], b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'd15-cap' + (id === 0 ? ' pilot' : '');
+  b.style.background = css(cap.rgb);
+  b.dataset.id = id;
+  b.setAttribute('role', 'listitem');
+  b.innerHTML = `<span class="lbl" aria-hidden="true">${cap.label}</span>`;
+  if (id === 0) {
+    b.disabled = true;
+    b.setAttribute('aria-label', 'Ficha fija de partida');
+  } else {
+    b.draggable = true;
+    b.setAttribute('aria-label', zone === 'pool'
+      ? `Ficha ${cap.label}, en la reserva. Pulsa para colocarla al final de la fila.`
+      : `Ficha ${cap.label}, posición ${pos} de la fila. Pulsa para devolverla; flechas para moverla.`);
   }
-  return d;
+  return b;
 }
-
-function renderD15() {
-  const order = el('d15Order'), pool = el('d15Pool');
-  order.innerHTML = ''; pool.innerHTML = '';
-  state.d15OrderIds.forEach((id, idx) => {
-    const cap = state.d15Caps[id];
-    const node = makeCapEl(cap, idx !== 0);
-    node.dataset.zone = 'order';
-    order.appendChild(node);
-  });
-  state.d15Pool.forEach(id => {
-    const cap = state.d15Caps[id];
-    const node = makeCapEl(cap, true);
-    node.dataset.zone = 'pool';
-    pool.appendChild(node);
-  });
-  bindDnD();
+function renderD15(focusId) {
+  el('d15Order').replaceChildren(...state.d15Order.map((id, i) => capButton(id, 'order', i)));
+  el('d15Pool').replaceChildren(...state.d15Pool.map(id => capButton(id, 'pool')));
+  el('d15Count').textContent = `(${state.d15Order.length - 1} de ${D15_N - 1} colocadas)`;
+  const target = document.querySelector(`.d15-cap[data-id="${focusId}"]`) || el('d15Pool').querySelector('.d15-cap') || el('d15Order').lastElementChild;
+  if (focusId !== undefined && target) target.focus();
 }
-
-function bindDnD() {
-  let dragged = null;
-  document.querySelectorAll('.d15-cap[draggable="true"]').forEach(c => {
-    c.addEventListener('dragstart', e => {
-      dragged = c;
-      e.dataTransfer.setData('text/plain', c.dataset.id);
-      e.dataTransfer.effectAllowed = 'move';
-    });
-  });
-  ['d15Order','d15Pool'].forEach(zone => {
-    const z = el(zone);
-    z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
-    z.addEventListener('dragleave', () => z.classList.remove('over'));
-    z.addEventListener('drop', e => {
-      e.preventDefault(); z.classList.remove('over');
-      if (!dragged) return;
-      const id = parseInt(dragged.dataset.id, 10);
-      // quitar de donde esté
-      state.d15Pool = state.d15Pool.filter(x => x !== id);
-      state.d15OrderIds = state.d15OrderIds.filter(x => x !== id);
-      if (zone === 'd15Order') {
-        // determinar posición basada en coord x del drop
-        const rect = z.getBoundingClientRect();
-        const caps = [...z.querySelectorAll('.d15-cap')];
-        let insertAt = state.d15OrderIds.length;
-        for (let i = 0; i < caps.length; i++) {
-          const r = caps[i].getBoundingClientRect();
-          if (e.clientX < r.left + r.width/2) { insertAt = i; break; }
-        }
-        if (insertAt < 1) insertAt = 1; // no desplazar el piloto
-        state.d15OrderIds.splice(insertAt, 0, id);
-      } else {
-        state.d15Pool.push(id);
-      }
-      renderD15();
-    });
-  });
-  // Fallback táctil mínimo: tap para mover entre zonas (si drag no funciona en móvil)
-  document.querySelectorAll('.d15-cap[draggable="true"]').forEach(c => {
-    c.addEventListener('dblclick', () => {
-      const id = parseInt(c.dataset.id, 10);
-      if (state.d15Pool.includes(id)) {
-        state.d15Pool = state.d15Pool.filter(x => x !== id);
-        state.d15OrderIds.push(id);
-      } else {
-        state.d15OrderIds = state.d15OrderIds.filter(x => x !== id);
-        state.d15Pool.push(id);
-      }
-      renderD15();
-    });
+function moveCap(id, zone, index, focusId = id) {
+  state.d15Order = state.d15Order.filter(x => x !== id);
+  state.d15Pool = state.d15Pool.filter(x => x !== id);
+  if (zone === 'order') {
+    const i = Math.max(1, Math.min(index ?? state.d15Order.length, state.d15Order.length));
+    state.d15Order.splice(i, 0, id);
+  } else state.d15Pool.push(id);
+  el('d15Msg').textContent = '';
+  renderD15(focusId);
+}
+el('d15Pool').addEventListener('click', e => {
+  const c = e.target.closest('.d15-cap'); if (!c) return;
+  moveCap(+c.dataset.id, 'order', undefined, -1);   // foco a la siguiente ficha de la reserva
+});
+el('d15Order').addEventListener('click', e => {
+  const c = e.target.closest('.d15-cap'); if (!c || c.disabled) return;
+  moveCap(+c.dataset.id, 'pool');
+});
+el('d15Order').addEventListener('keydown', e => {
+  const c = e.target.closest('.d15-cap'); if (!c || c.disabled) return;
+  const id = +c.dataset.id, i = state.d15Order.indexOf(id);
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); moveCap(id, 'order', i - 1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); moveCap(id, 'order', i + 1); }
+});
+document.addEventListener('dragstart', e => {
+  const c = e.target.closest && e.target.closest('.d15-cap');
+  if (!c) return;
+  state.dragId = +c.dataset.id;
+  e.dataTransfer.setData('text/plain', c.dataset.id);
+  e.dataTransfer.effectAllowed = 'move';
+});
+for (const zone of ['d15Order', 'd15Pool']) {
+  const z = el(zone);
+  z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('over'));
+  z.addEventListener('drop', e => {
+    e.preventDefault(); z.classList.remove('over');
+    const id = state.dragId; state.dragId = null;
+    if (id === null) return;
+    if (zone === 'd15Pool') return moveCap(id, 'pool');
+    // Posición: antes de la primera ficha (sin contar la arrastrada) que quede después del puntero
+    const others = [...z.querySelectorAll('.d15-cap')].filter(c => +c.dataset.id !== id);
+    let index = others.length;
+    for (let i = 0; i < others.length; i++) {
+      const r = others[i].getBoundingClientRect();
+      if (e.clientY < r.top || (e.clientY <= r.bottom && e.clientX < r.left + r.width / 2)) { index = i; break; }
+    }
+    moveCap(id, 'order', index);
   });
 }
-
 el('d15Submit').onclick = () => {
-  if (state.d15Pool.length > 0) {
-    alert('Faltan fichas por colocar en la fila ordenada.');
+  if (state.d15Pool.length) {
+    el('d15Msg').textContent = `✗ Faltan ${state.d15Pool.length} fichas por colocar en la fila.`;
     return;
   }
-  computeResult();
+  state.result = buildResult();
+  renderResult(state.result);
   el('resultTab').disabled = false;
   show('resultSection');
 };
-
-/* =========================================================================
-   DIAGNÓSTICO ORIENTATIVO
-   ========================================================================= */
-function computeResult() {
-  // Láminas: aciertos por tipo y por nivel
-  const byType = { protan:{1:[], 2:[], 3:[]}, deutan:{1:[], 2:[], 3:[]}, tritan:{1:[], 2:[], 3:[]} };
-  let controlOK = true;
-  for (const a of state.answers) {
-    if (a.plate.type === 'control') { controlOK = a.correct; continue; }
-    byType[a.plate.type][a.plate.level].push(a.correct);
-  }
-  const score = (type) => {
-    const s = {};
-    for (const lvl of [1,2,3]) {
-      const arr = byType[type][lvl];
-      s[lvl] = arr.length ? arr.filter(Boolean).length / arr.length : 0;
-    }
-    // "pasa" el nivel si acierta >=50% (sólo hay 1 por nivel aquí, así que 0 o 1)
-    const hardestPassed = [3,2,1].find(l => s[l] >= 1) || 0;
-    return { s, hardestPassed };
-  };
-  const r = { protan: score('protan'), deutan: score('deutan'), tritan: score('tritan') };
-
-  // Peor eje = el que menos niveles difíciles pasó
-  const types = ['protan','deutan','tritan'];
-  types.sort((x,y) => r[x].hardestPassed - r[y].hardestPassed);
-  const worst = types[0];
-  const bestLevelOverall = Math.max(r.protan.hardestPassed, r.deutan.hardestPassed, r.tritan.hardestPassed);
-
-  // Severidad por tipo peor:
-  // pasó L3 → normal, pasó sólo L2 → leve, sólo L1 → moderado, nada → fuerte
-  const severityMap = {3:'normal', 2:'leve', 1:'moderada', 0:'fuerte'};
-  const worstSev = severityMap[r[worst].hardestPassed];
-  const normalOnAll = types.every(t => r[t].hardestPassed === 3);
-
-  // D-15: analizar eje
-  const d15 = analyzeD15();
-
-  // Veredicto
-  let verdictText = '';
-  let confidence = 'alta';
-  if (!controlOK) { confidence = 'baja'; }
-  // Si D-15 contradice (p. ej. láminas dicen protan pero D-15 marca tritan), bajar confianza
-  if (!normalOnAll && d15.axisType && d15.axisType !== worst && d15.majorErrors >= 2) {
-    confidence = 'baja';
-  }
-
-  if (normalOnAll && d15.majorErrors <= 1) {
-    verdictText = `<strong class="state-ok">Visión del color dentro de lo normal.</strong><br>
-      Pasaste los tres niveles de dificultad en los tres ejes (protan/deutan/tritan) y el D-15 no muestra errores significativos.`;
-  } else {
-    const typeLabel = { protan:'protan (rojo)', deutan:'deutan (verde)', tritan:'tritan (azul)' }[worst];
-    verdictText = `<strong class="state-fail">Posible deficiencia en el eje ${typeLabel}, severidad ${worstSev}.</strong><br>
-      ${d15.axisType ? `El ordenamiento D-15 es compatible con un eje <strong>${d15.axisType}</strong> (${d15.majorErrors} cruces).` : 'El D-15 no muestra un eje claro.'}
-      <br>Confianza del resultado: <strong>${confidence}</strong>${!controlOK ? ' (fallaste la lámina de control: el resultado puede no ser fiable; revisa pantalla y vuelve a intentar).' : ''}.`;
-  }
-  el('verdict').innerHTML = verdictText;
-
-  // Breakdown table
-  let html = '<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100"><th class="p-2 border">Eje</th><th class="p-2 border">Nivel 1 (fácil)</th><th class="p-2 border">Nivel 2 (medio)</th><th class="p-2 border">Nivel 3 (difícil)</th></tr></thead><tbody>';
-  const mark = ok => ok ? '<span class="state-ok">acierto</span>' : '<span class="state-fail">falla</span>';
-  for (const t of ['protan','deutan','tritan']) {
-    html += `<tr><td class="p-2 border font-semibold">${t}</td>`;
-    for (const lvl of [1,2,3]) {
-      const arr = byType[t][lvl];
-      html += `<td class="p-2 border">${arr.length ? mark(arr[0]) : '—'}</td>`;
-    }
-    html += '</tr>';
-  }
-  html += `</tbody></table>
-    <p class="mt-2">Control: ${controlOK ? '<span class="state-ok">superado</span>' : '<span class="state-fail">FALLADO — resultado poco fiable</span>'}.</p>
-    <p>D-15: ${d15.majorErrors} cruces mayores, ángulo medio ${Math.round(d15.axisAngle*180/Math.PI)}° (eje ${d15.axisType || 'no concluyente'}).</p>`;
-  el('breakdown').innerHTML = html;
-
-  drawD15Diagram(d15);
-
-  const reportData = {byType, controlOK, worst, worstSev, normalOnAll, d15, confidence};
-  el('exportResult').onclick = () => {
-    const text = buildReport(reportData);
-    navigator.clipboard.writeText(text).then(() => alert('Resumen copiado al portapapeles.'));
-  };
-  el('exportPDF').onclick = () => exportPDF(reportData);
-}
-
-function exportPDF({byType, controlOK, worst, worstSev, normalOnAll, d15, confidence}) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  const M = 18;
-  let y = M;
-  const line = (txt, size = 11, bold = false) => {
-    doc.setFont('helvetica', bold ? 'bold' : 'normal');
-    doc.setFontSize(size);
-    const wrapped = doc.splitTextToSize(txt, 210 - M*2);
-    doc.text(wrapped, M, y);
-    y += wrapped.length * (size * 0.42) + 1.5;
-  };
-  const space = (n = 3) => { y += n; };
-
-  line('Informe orientativo de visión del color', 16, true);
-  line(new Date().toLocaleString(), 9);
-  space(2);
-
-  line('Resultado', 13, true);
-  const typeLabel = { protan: 'protan (eje rojo-verde, afecta receptor L)', deutan: 'deutan (eje rojo-verde, afecta receptor M)', tritan: 'tritan (eje azul-amarillo, afecta receptor S)' };
-  if (normalOnAll && d15.majorErrors <= 1) {
-    line('Visión del color dentro de lo normal.', 11, true);
-    line('Se superaron los tres niveles de dificultad en los tres ejes de confusión (protan, deutan, tritan) y el ordenamiento D-15 no muestra errores significativos.');
-  } else {
-    line(`Posible deficiencia en el eje ${typeLabel[worst]}.`, 11, true);
-    line(`Severidad estimada: ${worstSev}.`);
-    if (d15.axisType) line(`El ordenamiento D-15 es compatible con un eje ${d15.axisType} (${d15.majorErrors} cruces mayores).`);
-  }
-  line(`Confianza del resultado: ${confidence}.${!controlOK ? ' La lámina de control falló: el resultado puede no ser fiable (revisar pantalla, brillo, filtros de color).' : ''}`);
-  space();
-
-  line('Metodología', 13, true);
-  line('Láminas pseudoisocromáticas generadas por software. Figura y fondo elegidos sobre las líneas de confusión protan, deutan y tritan en el espacio CIE xy (puntos copunctales clásicos; convertidos a sRGB D65). Cada punto de la lámina varía su luminancia ±20 % de forma aleatoria para que la figura no pueda discriminarse por brillo. Niveles 1/2/3 corresponden a distancias decrecientes a lo largo de la línea de confusión (0.085 / 0.045 / 0.025 en xy). Una lámina de control acromática verifica legibilidad y preparación de la pantalla.');
-  line('Ordenamiento D-15: 16 fichas en CIELAB a L=70, C=38, equiespaciadas en hue. Una ficha fija como punto de partida; el resto se ordena. Se calcula el ángulo medio de los vectores de error (cruces mayores) y se compara con los ejes clínicos aproximados.');
-  space();
-
-  line('Resultados por lámina', 13, true);
-  for (const t of ['protan', 'deutan', 'tritan']) {
-    const row = [1,2,3].map(l => {
-      const arr = byType[t][l];
-      return `L${l}: ${arr.length ? (arr[0] ? 'acierto' : 'falla') : '—'}`;
-    }).join('   ');
-    line(`${t.padEnd(8)}  ${row}`, 10);
-  }
-  line(`Control:  ${controlOK ? 'superado' : 'FALLADO'}`, 10);
-  space();
-
-  line('Ordenamiento D-15', 13, true);
-  line(`Cruces mayores: ${d15.majorErrors}. Ángulo medio del eje de error: ${Math.round(d15.axisAngle*180/Math.PI)}°. Eje: ${d15.axisType || 'no concluyente'}.`, 10);
-  space(2);
-
-  // Diagrama del D-15
-  try {
-    const img = el('d15Diagram').toDataURL('image/png');
-    const w = 80, h = 80;
-    if (y + h > 280) { doc.addPage(); y = M; }
-    doc.addImage(img, 'PNG', (210 - w)/2, y, w, h);
-    y += h + 4;
-    line('Diagrama D-15: círculo con el orden ideal; línea azul = orden del usuario; línea negra discontinua = eje de confusión estimado.', 9);
-  } catch {}
-
-  space();
-  line('Condiciones de la prueba', 13, true);
-  line('Realizada en pantalla no calibrada, con las verificaciones de preparación (brillo, modo nocturno desactivado, sin filtro de luz azul, sin ajuste automático de color, sin filtros de accesibilidad del sistema) confirmadas por el paciente antes de empezar.');
-  space();
-
-  line('Nota clínica', 13, true);
-  line('Este informe es orientativo y no reemplaza un examen profesional. Para un diagnóstico formal se recomienda consulta con oftalmólogo u optómetra con pruebas estándar en condiciones controladas (Ishihara impreso con iluminación C/D65, Farnsworth D-15 o 100-Hue, anomaloscopio de Nagel).');
-
-  doc.save(`informe-vision-color-${new Date().toISOString().slice(0,10)}.pdf`);
-}
-
-function analyzeD15() {
-  // Para cada par consecutivo en el orden del usuario, calcula el ángulo del vector a*b*.
-  // "Cruce mayor" = salto de hue mayor a 60° (más de 2 posiciones del ideal).
-  const caps = state.d15Caps;
-  const order = state.d15OrderIds;
-  const vectors = [];
-  let majorErrors = 0;
-  for (let i = 0; i < order.length - 1; i++) {
-    const a = caps[order[i]], b = caps[order[i+1]];
-    const da = b.a - a.a, db = b.b - a.b;
-    const stepDist = Math.hypot(da, db);
-    const idealDist = 2 * 38 * Math.sin(Math.PI/16); // paso ideal en LAB
-    if (stepDist > idealDist * 2.2) {
-      majorErrors++;
-      vectors.push({a: da, b: db});
-    }
-  }
-  // Ángulo medio de los cruces
-  let axisAngle = 0;
-  if (vectors.length) {
-    let sx = 0, sy = 0;
-    vectors.forEach(v => {
-      let ang = Math.atan2(v.b, v.a);
-      // doble ángulo para que vectores opuestos se sumen (ejes, no direcciones)
-      sx += Math.cos(2*ang); sy += Math.sin(2*ang);
-    });
-    axisAngle = Math.atan2(sy, sx) / 2;
-  }
-  // Mapeo orientativo del eje (ángulo en LAB a tipo clínico):
-  // protan ~ -5°  (eje rojo-verde-azul, ligeramente hacia azul)
-  // deutan ~ +10°
-  // tritan ~ +75° (eje azul-amarillo)
-  let axisType = null;
-  if (majorErrors >= 2) {
-    const degs = (axisAngle*180/Math.PI + 180) % 180; // [0,180)
-    if (degs < 40 || degs > 160) axisType = 'protan/deutan';
-    else if (degs > 50 && degs < 110) axisType = 'tritan';
-    else axisType = 'mixto';
-  }
-  return { majorErrors, axisAngle, axisType };
-}
-
-function drawD15Diagram(d15) {
-  const c = el('d15Diagram'), ctx = c.getContext('2d');
-  const W = c.width, H = c.height, cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 30;
-  ctx.clearRect(0, 0, W, H);
-  const caps = state.d15Caps;
-  // Posiciones: cada cap en su hue ideal
-  const pos = caps.map(cap => ({
-    x: cx + R*Math.cos(cap.hue - Math.PI/2),
-    y: cy + R*Math.sin(cap.hue - Math.PI/2),
-  }));
-  // Eje aproximado
-  if (d15.majorErrors >= 2) {
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.moveTo(cx + R*Math.cos(d15.axisAngle), cy + R*Math.sin(d15.axisAngle));
-    ctx.lineTo(cx - R*Math.cos(d15.axisAngle), cy - R*Math.sin(d15.axisAngle));
-    ctx.stroke(); ctx.setLineDash([]);
-  }
-  // Trazado del orden del usuario
-  ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2;
-  ctx.beginPath();
-  state.d15OrderIds.forEach((id, i) => {
-    const p = pos[id];
-    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-  });
-  ctx.stroke();
-  // Fichas
-  caps.forEach((cap, i) => {
-    const p = pos[i];
-    ctx.fillStyle = `rgb(${cap.rgb[0]},${cap.rgb[1]},${cap.rgb[2]})`;
-    ctx.beginPath(); ctx.arc(p.x, p.y, 12, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = '#000'; ctx.lineWidth = i === 0 ? 3 : 1;
-    ctx.stroke();
-    ctx.fillStyle = '#000'; ctx.font = '11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(i === 0 ? 'P' : String(i), p.x, p.y - 16);
-  });
-}
-
-function buildReport({byType, controlOK, worst, worstSev, normalOnAll, d15, confidence}) {
-  const lines = [];
-  lines.push('Resumen de prueba orientativa de visión del color');
-  lines.push(new Date().toLocaleString());
-  lines.push('');
-  lines.push('Láminas pseudoisocromáticas (figura/fondo sobre líneas de confusión en CIE xy, con jitter de luminancia):');
-  for (const t of ['protan','deutan','tritan']) {
-    const row = [1,2,3].map(l => {
-      const arr = byType[t][l];
-      return `L${l}: ${arr.length ? (arr[0] ? 'acierto' : 'falla') : '—'}`;
-    }).join(' | ');
-    lines.push(`  ${t.padEnd(7)}: ${row}`);
-  }
-  lines.push(`Control: ${controlOK ? 'superado' : 'FALLADO'}`);
-  lines.push('');
-  lines.push(`D-15: ${d15.majorErrors} cruces mayores, ángulo medio del eje de error ${Math.round(d15.axisAngle*180/Math.PI)}°, eje: ${d15.axisType || 'no concluyente'}`);
-  lines.push('');
-  if (normalOnAll && d15.majorErrors <= 1) {
-    lines.push('Conclusión: visión del color dentro de lo normal.');
-  } else {
-    lines.push(`Conclusión orientativa: posible deficiencia en el eje ${worst}, severidad ${worstSev}.`);
-  }
-  lines.push(`Confianza: ${confidence}.`);
-  lines.push('');
-  lines.push('Esto es un resultado orientativo, generado por software en una pantalla no calibrada.');
-  lines.push('No reemplaza un diagnóstico profesional.');
-  return lines.join('\n');
-}
-
-/* --- Reiniciar --- */
 el('restart').onclick = () => {
-  state.plates = []; state.plateIdx = 0; state.answers = [];
-  state.d15Pool = []; state.d15OrderIds = [];
-  el('plateTab').disabled = true; el('d15Tab').disabled = true; el('resultTab').disabled = true;
   document.querySelectorAll('#prepForm input[type="checkbox"]').forEach(c => c.checked = false);
+  el('plateTab').disabled = el('d15Tab').disabled = el('resultTab').disabled = true;
   show('prepSection');
 };
 
-/* --- PDF (mantiene lo que ya funcionaba) --- */
+/* =========================================================================
+   ANÁLISIS
+   ========================================================================= */
+const SEV_RANK = { normal: 0, leve: 1, moderada: 2, fuerte: 3 };
+const SEV_BY_FIRST_FAIL = { 1: 'fuerte', 2: 'moderada', 3: 'leve' };
+
+// Un nivel se supera con todas sus láminas acertadas. Severidad = primer nivel
+// (de fácil a difícil) no superado. Adivinar un número de 2 cifras tiene ~1 %
+// de probabilidad, así que un acierto es evidencia fuerte de que se vio.
+function analyzePlates(answers) {
+  const controls = answers.filter(a => a.plate.type === 'control');
+  const res = { controlOK: controls.every(a => a.correct), controlHits: controls.filter(a => a.correct).length, controlN: controls.length };
+  for (const axis of AXES) {
+    const levels = {};
+    for (const l of [1, 2, 3]) {
+      const arr = answers.filter(a => a.plate.type === axis && a.plate.level === l);
+      levels[l] = { c: arr.filter(a => a.correct).length, n: arr.length };
+    }
+    const firstFail = [1, 2, 3].find(l => levels[l].c < levels[l].n);
+    res[axis] = {
+      levels,
+      correct: [1, 2, 3].reduce((s, l) => s + levels[l].c, 0),
+      severity: firstFail ? SEV_BY_FIRST_FAIL[firstFail] : 'normal',
+      // incoherente: acertó todo un nivel difícil tras fallar todo uno más fácil
+      inconsistent: [1, 2].some(l => levels[l].c === 0 && [3, 2].some(h => h > l && levels[h].c === levels[h].n)),
+    };
+  }
+  res.misses = answers.filter(a => a.plate.type !== 'control' && !a.correct).length;
+  return res;
+}
+
+// Método de Vingrys y King-Smith (1988): momentos de inercia de los vectores de
+// diferencia de color entre fichas consecutivas -> ángulo de confusión, índice C
+// (radio mayor / radio mayor del orden perfecto; 1 = perfecto) e índice S
+// (radio mayor / radio menor; alto = errores concentrados en un eje).
+function analyzeD15(order, caps) {
+  const diffs = ids => ids.slice(1).map((id, i) => [caps[id].a - caps[ids[i]].a, caps[id].b - caps[ids[i]].b]);
+  const moments = v => {
+    let ia = 0, ib = 0, iab = 0;
+    for (const [a, b] of v) { ia += a*a; ib += b*b; iab += a*b; }
+    const half = (ia + ib) / 2, rad = Math.hypot((ia - ib) / 2, iab);
+    return { angle: 0.5 * Math.atan2(2*iab, ia - ib), rMaj: Math.sqrt((half + rad) / v.length), rMin: Math.sqrt(Math.max(half - rad, 0) / v.length) };
+  };
+  const u = moments(diffs(order)), ref = moments(diffs(caps.map(c => c.id)));
+  const step = 2 * D15_C * Math.sin(Math.PI / D15_N);
+  // "Cruce" = salto entre fichas separadas 3 o más posiciones en el círculo
+  const crossings = diffs(order).filter(([a, b]) => Math.hypot(a, b) > 2.2 * step).length;
+  const C = u.rMaj / ref.rMaj, S = u.rMaj / Math.max(u.rMin, 1e-9);
+  const angleDeg = ((u.angle * 180/Math.PI) % 180 + 180) % 180;
+  // shortcut: umbrales VKS adaptados a este juego de fichas (no a las fichas Munsell del D-15 real)
+  const abnormal = C >= 1.6 || crossings >= 2;
+  return { C, S, angleDeg, crossings, abnormal, axis: abnormal && S >= 1.5 ? nearestAxis(angleDeg) : null };
+}
+
+const TYPE_LABEL = {
+  protan: 'protan (rojo)', deutan: 'deutan (verde)', tritan: 'tritan (azul)',
+  'rojo-verde': 'rojo-verde (protan o deutan; subtipo no determinado)',
+  'no específico': 'no específico (ejes rojo-verde y azul-amarillo a la vez)',
+};
+const CLINICAL = {
+  protan:  { leve: 'protanomalía leve', moderada: 'protanomalía moderada', fuerte: 'protanopía o protanomalía severa' },
+  deutan:  { leve: 'deuteranomalía leve', moderada: 'deuteranomalía moderada', fuerte: 'deuteranopía o deuteranomalía severa' },
+  tritan:  { leve: 'tritanomalía leve', moderada: 'tritanomalía moderada', fuerte: 'tritanopía o tritanomalía severa' },
+};
+
+function diagnose(p, d) {
+  const affected = AXES.filter(a => p[a].severity !== 'normal');
+  const rg = affected.filter(a => a !== 'tritan');
+  const worst = axes => axes.reduce((s, a) => SEV_RANK[p[a].severity] > SEV_RANK[s] ? p[a].severity : s, 'normal');
+  let type = null, severity = 'normal', subtypeBy = null;
+  if (affected.length && rg.length && affected.includes('tritan')) { type = 'no específico'; severity = worst(affected); }
+  else if (affected.includes('tritan')) { type = 'tritan'; severity = p.tritan.severity; }
+  else if (rg.length) {
+    severity = worst(rg);
+    // Un protanope distingue las láminas deutan (tiene conos M) y viceversa: el eje con menos aciertos es el afectado.
+    if (p.protan.correct !== p.deutan.correct) { type = p.protan.correct < p.deutan.correct ? 'protan' : 'deutan'; subtypeBy = 'láminas'; }
+    else if (d.axis === 'protan' || d.axis === 'deutan') { type = d.axis; subtypeBy = 'ordenamiento'; }
+    else type = 'rojo-verde';
+  }
+
+  let conf = 2;
+  const reasons = [];
+  const lower = (to, why) => { conf = Math.min(conf, to); reasons.push(why); };
+  if (!p.controlOK) lower(0, 'Lámina de control no superada.');
+  if (type === 'no específico') lower(0, 'Fallos en el eje rojo-verde y en el azul-amarillo a la vez: patrón no típico de una deficiencia congénita.');
+  if (type && type !== 'no específico' && d.axis && (d.axis === 'tritan') !== (type === 'tritan'))
+    lower(0, `Las láminas y el ordenamiento señalan ejes distintos (${type === 'tritan' ? 'azul-amarillo' : 'rojo-verde'} frente a ${d.axis === 'tritan' ? 'azul-amarillo' : 'rojo-verde'}).`);
+  if (!type && d.abnormal) lower(1, 'Láminas normales, pero el ordenamiento tiene errores.');
+  if (severity === 'fuerte' && !d.abnormal) lower(1, 'Deficiencia fuerte en láminas, pero el ordenamiento no muestra errores.');
+  if (AXES.some(a => p[a].inconsistent)) lower(1, 'Respuestas incoherentes: se acertó un nivel difícil tras fallar uno más fácil del mismo eje.');
+  if (type && p.misses === 1) lower(1, 'Un único fallo en toda la prueba: resultado limítrofe.');
+
+  return { type, severity, subtypeBy, confidence: ['baja', 'media', 'alta'][conf], reasons,
+           clinical: type && CLINICAL[type] ? CLINICAL[type][severity] : null };
+}
+
+function buildResult() {
+  const plates = analyzePlates(state.answers);
+  const d15 = analyzeD15(state.d15Order, state.d15Caps);
+  return { date: new Date(), plates, d15, dx: diagnose(plates, d15), answers: state.answers, order: [...state.d15Order], caps: state.d15Caps };
+}
+
+/* =========================================================================
+   PRESENTACIÓN DEL RESULTADO
+   ========================================================================= */
+const levelCell = ({ c, n }) => c === n ? `<span class="state-ok">${c}/${n}</span>` : c === 0 ? `<span class="state-fail">${c}/${n}</span>` : `<span class="state-part">${c}/${n}</span>`;
+const axisLabel = { protan: 'Protan (rojo)', deutan: 'Deutan (verde)', tritan: 'Tritan (azul)', control: 'Control' };
+
+function verdictLines({ dx }) {
+  if (!dx.type) return { head: 'Visión del color normal.', body: 'Se superaron todas las láminas de los tres ejes, incluido el nivel más difícil (dE 8).' };
+  return {
+    head: `Deficiencia de visión del color tipo ${TYPE_LABEL[dx.type]}. Severidad: ${dx.severity}.`,
+    body: (dx.clinical ? `Compatible con ${dx.clinical}.` : '') +
+          (dx.subtypeBy === 'ordenamiento' ? ' Subtipo determinado por el ordenamiento de tonos.' : ''),
+  };
+}
+
+function renderResult(R) {
+  const { plates: p, d15, dx } = R, v = verdictLines(R);
+  el('verdict').innerHTML =
+    `<p class="font-bold text-lg md:text-xl ${dx.type ? 'state-fail' : 'state-ok'}">${v.head}</p>` +
+    (v.body ? `<p class="mt-1">${v.body}</p>` : '') +
+    `<p class="mt-2"><strong>Confiabilidad: ${dx.confidence}.</strong></p>` +
+    (dx.reasons.length ? `<ul class="list-disc pl-6 text-sm mt-1">${dx.reasons.map(r => `<li>${r}</li>`).join('')}</ul>` : '');
+
+  const th = 'class="p-2 border border-gray-400 text-left"', td = 'class="p-2 border border-gray-400"';
+  let h = `<table class="w-full border-collapse mb-2"><thead><tr class="bg-gray-100">
+      <th ${th}>Eje</th><th ${th}>Nivel 1 fácil (dE ${LEVEL_DE[1]})</th><th ${th}>Nivel 2 medio (dE ${LEVEL_DE[2]})</th><th ${th}>Nivel 3 difícil (dE ${LEVEL_DE[3]})</th><th ${th}>Resultado</th></tr></thead><tbody>`;
+  for (const a of AXES) h += `<tr><td ${td}><strong>${axisLabel[a]}</strong></td>${[1, 2, 3].map(l => `<td ${td}>${levelCell(p[a].levels[l])}</td>`).join('')}<td ${td}>${p[a].severity}</td></tr>`;
+  h += `<tr><td ${td}><strong>Control</strong></td><td ${td} colspan="4">${levelCell({ c: p.controlHits, n: p.controlN })} (debe leerla cualquier persona)</td></tr></tbody></table>
+    <p class="text-xs text-gray-700 mb-4">✓ nivel superado · ◐ parcial · ✗ ninguna acertada. Un nivel se supera acertando sus ${PLATES_PER_LEVEL} láminas.</p>
+    <p><strong>Ordenamiento:</strong> índice C = ${d15.C.toFixed(2)} (1,00 = perfecto; ≥ 1,60 indica errores), índice S = ${d15.S.toFixed(2)},
+       ángulo de confusión = ${d15.angleDeg.toFixed(0)}°, cruces = ${d15.crossings}. Eje: <strong>${d15.axis || (d15.abnormal ? 'sin eje definido' : 'sin errores significativos')}</strong>.
+       <span class="text-xs">(Ejes teóricos: protan ${AXIS_ANGLE.protan.toFixed(0)}°, deutan ${AXIS_ANGLE.deutan.toFixed(0)}°, tritan ${AXIS_ANGLE.tritan.toFixed(0)}°.)</span></p>
+    <details class="mt-3"><summary class="cursor-pointer font-semibold">Ver lámina por lámina</summary>
+    <table class="w-full border-collapse mt-2 text-sm"><thead><tr class="bg-gray-100"><th ${th}>#</th><th ${th}>Eje</th><th ${th}>Nivel</th><th ${th}>Número</th><th ${th}>Respuesta</th><th ${th}>Resultado</th></tr></thead><tbody>
+    ${R.answers.map((a, i) => `<tr><td ${td}>${i + 1}</td><td ${td}>${axisLabel[a.plate.type]}</td><td ${td}>${a.plate.level || '—'}</td><td ${td}>${a.plate.digit}</td><td ${td}>${a.given}</td><td ${td}>${a.correct ? '<span class="state-ok">acierto</span>' : '<span class="state-fail">fallo</span>'}</td></tr>`).join('')}
+    </tbody></table></details>`;
+  el('breakdown').innerHTML = h;
+  drawD15Diagram(R);
+}
+
+const AXIS_ABBR = { protan: 'Pro', deutan: 'Deu', tritan: 'Tri' };
+// Plano a*b*: a* (rojo) a la derecha, b* (amarillo) arriba.
+function drawD15Diagram({ d15, order, caps }) {
+  const c = el('d15Diagram'), ctx = c.getContext('2d');
+  const W = c.width, cx = W/2, R = W/2 - 44, k = R / D15_C;
+  const P = cap => [cx + cap.a * k, cx - cap.b * k];
+  const axisLine = (deg, len) => { const t = deg * Math.PI/180; return [cx + len*Math.cos(t), cx - len*Math.sin(t), cx - len*Math.cos(t), cx + len*Math.sin(t)]; };
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, W);
+  ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  ctx.strokeStyle = '#888'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+  for (const ax of AXES) {
+    const [x1, y1, x2, y2] = axisLine(AXIS_ANGLE[ax], R + 30);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.fillStyle = '#555'; ctx.fillText(AXIS_ABBR[ax], x1 + (x1 - cx) * 0.05, y1 + (y1 - cx) * 0.05);
+  }
+  if (d15.abnormal) {
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]);
+    const [x1, y1, x2, y2] = axisLine(d15.angleDeg, R + 14);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  order.forEach((id, i) => { const [x, y] = P(caps[id]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke();
+  for (const cap of caps) {
+    const [x, y] = P(cap);
+    ctx.fillStyle = css(cap.rgb);
+    ctx.beginPath(); ctx.arc(x, y, 11, 0, 2 * Math.PI); ctx.fill();
+    ctx.strokeStyle = '#000'; ctx.lineWidth = cap.id === 0 ? 3 : 1; ctx.stroke();
+    ctx.fillStyle = '#000';
+    ctx.fillText(cap.id === 0 ? 'P' : String(cap.id), cx + (x - cx) * 1.17, cx + (y - cx) * 1.17);
+  }
+}
+
+/* =========================================================================
+   INFORME (PDF y texto comparten el mismo contenido)
+   Sólo caracteres WinAnsi: las fuentes estándar de jsPDF no tienen Δ, ✓, →.
+   ========================================================================= */
+function reportBlocks(R) {
+  const { plates: p, d15, dx } = R, v = verdictLines(R);
+  const B = [];
+  B.push(['title', 'Informe de prueba de visión del color']);
+  B.push(['meta', `Fecha: ${R.date.toLocaleString('es')}  ·  Prueba binocular por software  ·  Pantalla ${screen.width}x${screen.height} px, escala ${window.devicePixelRatio}`]);
+  B.push(['h', 'Resultado']);
+  B.push(['strong', v.head]);
+  if (v.body) B.push(['p', v.body.trim()]);
+  B.push(['strong', `Confiabilidad: ${dx.confidence}.`]);
+  for (const r of dx.reasons) B.push(['p', '- ' + r]);
+
+  B.push(['h', 'Láminas pseudoisocromáticas: aciertos por eje y nivel']);
+  B.push(['mono', 'Eje             Nivel 1 (dE 40)  Nivel 2 (dE 18)  Nivel 3 (dE 8)   Resultado']);
+  for (const a of AXES) {
+    const cells = [1, 2, 3].map(l => `${p[a].levels[l].c}/${p[a].levels[l].n}`.padEnd(17)).join('');
+    B.push(['mono', `${axisLabel[a].padEnd(16)}${cells}${p[a].severity}`]);
+  }
+  B.push(['mono', `${'Control'.padEnd(16)}${p.controlHits}/${p.controlN} ${p.controlOK ? '(superado)' : '(NO superado)'}`]);
+  B.push(['p', `Un nivel se supera acertando sus ${PLATES_PER_LEVEL} láminas. Severidad = primer nivel no superado: nivel 3 leve, nivel 2 moderada, nivel 1 fuerte.`]);
+
+  B.push(['h', 'Ordenamiento de tonos (tipo D-15)']);
+  B.push(['p', `Índice C (confusión) = ${d15.C.toFixed(2)} (1,00 = orden perfecto; 1,60 o más indica errores). Índice S (selectividad) = ${d15.S.toFixed(2)}. Ángulo de confusión = ${d15.angleDeg.toFixed(0)}°. Cruces = ${d15.crossings}. Eje: ${d15.axis || (d15.abnormal ? 'sin eje definido' : 'sin errores significativos')}.`]);
+  B.push(['p', `Orden del paciente: P-${R.order.slice(1).join('-')}  (orden correcto: P-1-2-...-15).`]);
+  B.push(['img', 'd15Diagram']);
+  B.push(['small', `Plano a*b* de CIELAB (a* rojo a la derecha, b* amarillo arriba). Números = orden correcto, P = ficha fija. Línea continua = orden del paciente. Líneas punteadas finas = ejes teóricos protan (Pro, ${AXIS_ANGLE.protan.toFixed(0)}°), deutan (Deu, ${AXIS_ANGLE.deutan.toFixed(0)}°) y tritan (Tri, ${AXIS_ANGLE.tritan.toFixed(0)}°). Línea discontinua gruesa = eje de los errores.`]);
+
+  B.push(['h', 'Detalle lámina por lámina']);
+  B.push(['mono', ' #  Eje             Nivel  Número  Respuesta  Resultado']);
+  R.answers.forEach((a, i) => B.push(['mono',
+    `${String(i + 1).padStart(2)}  ${axisLabel[a.plate.type].padEnd(16)}${String(a.plate.level || '-').padEnd(7)}${String(a.plate.digit).padEnd(8)}${String(a.given).padEnd(11)}${a.correct ? 'acierto' : 'fallo'}`]));
+
+  B.push(['h', 'Metodología']);
+  B.push(['p', `Láminas generadas por software en cada intento, con números y orden aleatorios: ${3 * 3 * PLATES_PER_LEVEL} láminas diagnósticas (${PLATES_PER_LEVEL} por nivel y eje) y 2 de control acromáticas de alto contraste. Figura y fondo se calculan en el espacio de conos LMS (fundamentales de Smith-Pokorny) modificando sólo el cono L (protan), M (deutan) o S (tritan); así ambos colores caen sobre una línea de confusión del defecto (equivalente a las rectas que pasan por los puntos copunctales en CIE xy) y, para un dicrómata de ese tipo, son iguales en color y en brillo. Cada punto varía además su luminancia +/-25 % al azar para que la figura sólo se distinga por el tono. Dificultad calibrada por diferencia de color para un observador normal (CIELAB, D65): dE 40, 18 y 8, igual en los tres ejes.`]);
+  B.push(['p', `Ordenamiento: 16 fichas equiespaciadas en tono en CIELAB (L* 70, C* 38), una fija. Análisis por el método de Vingrys y King-Smith (1988): ángulo de confusión, índice C e índice S.`]);
+  B.push(['h', 'Condiciones']);
+  B.push(['p', 'Pantalla no calibrada. Antes de empezar, el paciente confirmó: brillo alto, modo nocturno desactivado, sin filtro de luz azul, sin ajuste automático de color, sin filtros de accesibilidad ni lentes con filtro de color, sin reflejos sobre la pantalla.']);
+  B.push(['h', 'Nota']);
+  B.push(['p', 'Prueba de cribado; no sustituye el examen clínico. Para el diagnóstico formal y la indicación de lentes o filtros para daltonismo se recomienda la confirmación por oftalmólogo u optómetra con pruebas estándar (Ishihara impreso con iluminación normalizada, Farnsworth D-15 o 100-Hue, anomaloscopio).']);
+  return B;
+}
+
+function exportPDF(R) {
+  const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  const MARGIN = 18, WIDTH = 210 - 2 * MARGIN, BOTTOM = 297 - MARGIN;
+  const STYLE = { title: ['helvetica', 'bold', 16], meta: ['helvetica', 'normal', 8.5], h: ['helvetica', 'bold', 12.5],
+                  strong: ['helvetica', 'bold', 11], p: ['helvetica', 'normal', 10], small: ['helvetica', 'normal', 8.5], mono: ['courier', 'normal', 8.5] };
+  let y = MARGIN;
+  const newPageIf = need => { if (y + need > BOTTOM) { doc.addPage(); y = MARGIN; } };
+  for (const [kind, text] of reportBlocks(R)) {
+    if (kind === 'img') {
+      const size = 82;
+      newPageIf(size + 4);
+      doc.addImage(el(text).toDataURL('image/png'), 'PNG', (210 - size) / 2, y, size, size, undefined, 'FAST');
+      y += size + 3;
+      continue;
+    }
+    const [font, weight, pt] = STYLE[kind];
+    doc.setFont(font, weight); doc.setFontSize(pt);
+    const lines = doc.splitTextToSize(text, WIDTH);
+    const lh = pt * 0.3528 * 1.3;          // pt -> mm, interlineado 1.3
+    const before = kind === 'h' ? 5 : kind === 'mono' ? 0 : 1.5;
+    newPageIf(before + lines.length * lh + (kind === 'h' ? 12 : 0));   // un título nunca queda solo al pie
+    y += before;
+    for (const line of lines) { y += lh; doc.text(line, MARGIN, y); }
+  }
+  const pages = doc.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+    doc.text(`Página ${i} de ${pages}`, 210 - MARGIN, 297 - 8, { align: 'right' });
+  }
+  doc.save(`informe-vision-color-${R.date.toISOString().slice(0, 10)}.pdf`);
+}
+
+el('exportPDF').onclick = () => exportPDF(state.result);
+el('exportResult').onclick = () => {
+  const text = reportBlocks(state.result).filter(([k]) => k !== 'img').map(([k, t]) => (k === 'h' ? '\n' + t.toUpperCase() : t)).join('\n');
+  navigator.clipboard.writeText(text).then(
+    () => { el('exportResult').textContent = '✓ Resumen copiado'; },
+    () => { el('exportResult').textContent = '✗ No se pudo copiar'; });
+};
+
+/* =========================================================================
+   VISOR DEL PDF OFICIAL
+   ========================================================================= */
 let pdfDoc = null, pageNum = 1;
 async function loadPDF() {
   try {
-    const lib = window['pdfjsLib'];
+    const lib = window.pdfjsLib;
     lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
     pdfDoc = await lib.getDocument('documents/TEST_DE_HASRIRAMA_OFICIAL_COMPLETO.pdf').promise;
     el('pdfError').classList.add('hidden');
@@ -806,29 +741,49 @@ async function loadPDF() {
 function renderPdfPage(n) {
   if (!pdfDoc) return;
   pdfDoc.getPage(n).then(page => {
-    const canvas = el('pdfCanvas'), ctx = canvas.getContext('2d');
-    const viewport = page.getViewport({ scale: 1.3 });
+    const canvas = el('pdfCanvas'), viewport = page.getViewport({ scale: 1.3 });
     canvas.height = viewport.height; canvas.width = viewport.width;
-    page.render({ canvasContext: ctx, viewport }).promise.then(() => {
-      el('pageInfo').textContent = `Página ${n} de ${pdfDoc.numPages}`;
-    });
-  });
+    return page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  }).then(() => { el('pageInfo').textContent = `Página ${n} de ${pdfDoc.numPages}`; })
+    .catch(() => el('pdfError').classList.remove('hidden'));
 }
-el('prevPage').onclick = () => { if (pageNum > 1) { pageNum--; renderPdfPage(pageNum); } };
-el('nextPage').onclick = () => { if (pdfDoc && pageNum < pdfDoc.numPages) { pageNum++; renderPdfPage(pageNum); } };
+el('prevPage').onclick = () => { if (pageNum > 1) renderPdfPage(--pageNum); };
+el('nextPage').onclick = () => { if (pdfDoc && pageNum < pdfDoc.numPages) renderPdfPage(++pageNum); };
 
-/* --- Autocheck mínimo al cargar (ponytail: sanity check de la ciencia) --- */
+/* =========================================================================
+   AUTOTEST: si algo de la ciencia se rompe, aparece en la consola.
+   ========================================================================= */
 (function selfTest() {
-  // La pareja de confusión protan a d=0.085 debe estar en gamut y el fondo tener
-  // más verde que la figura (sanity para línea protan).
-  const p = confusionPair('protan', 0.085);
-  console.assert(p && p.fig && p.bg, 'confusionPair protan debe devolver RGBs');
-  console.assert(p.bg[1] > p.fig[1], 'En línea protan, el fondo debe tener más verde');
-  const t = confusionPair('tritan', 0.085);
-  console.assert(t && t.fig && t.bg, 'confusionPair tritan debe devolver RGBs');
+  const check = (ok, msg) => { if (!ok) console.error('AUTOTEST FALLIDO: ' + msg); };
+  for (const axis of AXES) for (const l of [1, 2, 3]) {
+    const pr = PAIRS[axis][l];
+    check(Math.abs(pr.dE - LEVEL_DE[l]) < 0.5, `${axis} nivel ${l}: dE ${pr.dE.toFixed(2)}`);
+    for (const s of [1 - JITTER, 1 + JITTER]) for (const c of [pr.fig, pr.bg])
+      check(xyzToRGB(c.map(v => v * s)), `${axis} nivel ${l} fuera de gamut con ruido ${s}`);
+    const lf = mul(SP, pr.fig), lb = mul(SP, pr.bg);
+    for (let i = 0; i < 3; i++) if (i !== CONE[axis]) check(Math.abs(lf[i] - lb[i]) < 1e-9, `${axis}: el dicrómata vería diferencia en el cono ${i}`);
+  }
+  for (const s of [1 - JITTER, 1 + JITTER]) for (const y of [0.06, 0.45]) check(xyzToRGB(WHITE.map(v => v * y * s)), 'control fuera de gamut');
+  const caps = makeD15Caps();
+  check(caps.every(c => c.rgb), 'ficha D-15 fuera de gamut');
+  const perfect = analyzeD15(caps.map(c => c.id), caps);
+  check(Math.abs(perfect.C - 1) < 1e-9 && !perfect.abnormal, 'el orden perfecto no da C = 1');
+  check(!analyzeD15([0, ...caps.slice(1).map(c => c.id).reverse()], caps).abnormal, 'el orden perfecto inverso se marca como error');
+  // Dicrómata simulado: ordena por la única coordenada que distingue (perpendicular a su eje)
+  for (const axis of AXES) {
+    const t = (AXIS_ANGLE[axis] + 90) * Math.PI/180, proj = c => c.a*Math.cos(t) + c.b*Math.sin(t);
+    const order = [0, ...caps.slice(1).sort((x, y) => proj(y) - proj(x)).map(c => c.id)];
+    const d = analyzeD15(order, caps);
+    check(d.axis === axis, `D-15 simulado ${axis} clasificado como ${d.axis} (${d.angleDeg.toFixed(0)}°)`);
+  }
+  // Protanope simulado: falla todas las protan, acierta el resto
+  const fake = buildPlateSet().map(plate => ({ plate, given: '', correct: plate.type !== 'protan' }));
+  const dx = diagnose(analyzePlates(fake), { abnormal: true, axis: 'protan', C: 3, S: 3, angleDeg: AXIS_ANGLE.protan, crossings: 8 });
+  check(dx.type === 'protan' && dx.severity === 'fuerte' && dx.confidence === 'alta', `protanope simulado: ${JSON.stringify(dx)}`);
+  const normal = buildPlateSet().map(plate => ({ plate, given: '', correct: true }));
+  check(diagnose(analyzePlates(normal), perfect).type === null, 'observador normal simulado no sale normal');
 })();
 
-// arranque
 show('prepSection');
 </script>
 </body>
